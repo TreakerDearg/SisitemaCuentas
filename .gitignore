@@ -1,0 +1,120 @@
+# ==========================
+# Dependencies
+# ==========================
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# PNPM
+.pnpm-store
+
+# ==========================
+# Next.js
+# ==========================
+.next/
+out/
+
+# Build
+build/
+dist/
+
+# ==========================
+# Testing
+# ==========================
+coverage/
+.nyc_output
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================
+# Environment
+# ==========================
+.env
+.env.*
+!.env.example
+
+# Optional local overrides
+.local
+*.local
+
+# ==========================
+# Database
+# ==========================
+*.sqlite
+*.sqlite3
+*.db
+mongodb-data/
+
+# ==========================
+# Uploads / Temp
+# ==========================
+uploads/
+tmp/
+temp/
+.cache/
+
+# ==========================
+# Vercel
+# ==========================
+.vercel
+
+# ==========================
+# IDE / Editors
+# ==========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/
+
+# ==========================
+# OS files
+# ==========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================
+# Security
+# ==========================
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# SSH
+id_rsa*
+id_ed25519*
+
+# ==========================
+# TypeScript
+# ==========================
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================
+# Generated
+# ==========================
+*.tgz
+*.zip
+
+# ==========================
+# Misc
+# ==========================
+eslintcache
