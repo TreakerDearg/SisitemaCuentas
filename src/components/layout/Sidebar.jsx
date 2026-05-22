@@ -23,7 +23,8 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-3 left-3 z-50 p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+        className="lg:hidden fixed top-2 left-2 z-50 p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+        aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {isOpen ? (
@@ -43,18 +44,18 @@ export function Sidebar() {
       `}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-4 lg:p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
               <LogoWithImage src="/Logo.png" size="md" alt="Gestor de Gastos" />
               <div>
-                <h1 className="text-xl font-bold text-white">Gestor</h1>
+                <h1 className="text-lg lg:text-xl font-bold text-white">Gestor</h1>
                 <p className="text-xs text-purple-200">de Gastos</p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-3 lg:p-4 space-y-1 overflow-y-auto">
             {menuItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
@@ -65,22 +66,22 @@ export function Sidebar() {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                     ${isActive 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg scale-105' 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg scale-[1.02]' 
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                     }
                   `}
                 >
                   <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-purple-300'}`} />
-                  <span className="font-medium">{item.name}</span>
+                  <span className="font-medium text-sm lg:text-base">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-white/10">
-            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
-              <p className="text-xs text-purple-200 text-center">
+          <div className="p-3 lg:p-4 border-t border-white/10">
+            <div className="bg-gradient-to-r from-indigo-500/20 to-purple-600/20 rounded-xl p-3 lg:p-4 border border-purple-500/30">
+              <p className="text-[10px] lg:text-xs text-purple-200 text-center">
                 © 2024 Gestor de Gastos
               </p>
             </div>
@@ -91,7 +92,7 @@ export function Sidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}

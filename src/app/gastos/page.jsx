@@ -174,14 +174,16 @@ export default function Gastos() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gastos</h1>
-            <p className="text-gray-600 mt-1">Gestiona tus gastos diarios</p>
+            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Gastos
+            </h1>
+            <p className="text-slate-600 mt-1 text-sm lg:text-base">Gestiona tus gastos diarios</p>
           </div>
-          <Button onClick={openCreateModal}>
+          <Button onClick={openCreateModal} className="w-full sm:w-auto">
             + Nuevo Gasto
           </Button>
         </div>
@@ -189,20 +191,20 @@ export default function Gastos() {
         {/* Transactions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Gastos</CardTitle>
+            <CardTitle className="text-base lg:text-xl">Lista de Gastos</CardTitle>
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
               <EmptyState
                 icon={
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                   </svg>
                 }
                 title="No hay gastos registrados"
                 description="Comienza registrando tu primer gasto"
                 action={
-                  <Button onClick={openCreateModal}>
+                  <Button onClick={openCreateModal} className="w-full sm:w-auto">
                     Registrar gasto
                   </Button>
                 }
@@ -212,11 +214,11 @@ export default function Gastos() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Categoría</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Método de pago</TableHead>
+                    <TableHead className="hidden lg:table-cell">Descripción</TableHead>
+                    <TableHead className="hidden md:table-cell">Método</TableHead>
                     <TableHead>Monto</TableHead>
                     <TableHead>Fecha</TableHead>
-                    <TableHead>Acciones</TableHead>
+                    <TableHead className="hidden sm:table-cell">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -227,19 +229,19 @@ export default function Gastos() {
                           {transaction.category}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {transaction.description || '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {transaction.paymentMethod || '-'}
                       </TableCell>
-                      <TableCell className="text-red-600 font-semibold">
+                      <TableCell className="text-red-600 font-semibold text-sm lg:text-base">
                         {formatCurrency(transaction.amount)}
                       </TableCell>
                       <TableCell>
                         {formatDate(transaction.date)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"
@@ -267,6 +269,21 @@ export default function Gastos() {
             )}
           </CardContent>
         </Card>
+
+        {/* Mobile Action Button */}
+        {transactions.length > 0 && (
+          <div className="fixed bottom-4 right-4 lg:hidden z-40">
+            <Button
+              onClick={openCreateModal}
+              className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+              aria-label="Nuevo gasto"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </Button>
+          </div>
+        )}
 
         {/* Create/Edit Modal */}
         <Modal
@@ -323,7 +340,7 @@ export default function Gastos() {
               required
             />
 
-            <div className="flex gap-3 justify-end pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
               <Button
                 type="button"
                 variant="secondary"
@@ -331,10 +348,11 @@ export default function Gastos() {
                   setModalOpen(false);
                   resetForm();
                 }}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="w-full sm:w-auto">
                 {editMode ? 'Actualizar' : 'Crear'}
               </Button>
             </div>
@@ -352,11 +370,11 @@ export default function Gastos() {
           size="sm"
         >
           <div className="space-y-4">
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm lg:text-base">
               ¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.
             </p>
             {transactionToDelete && (
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="bg-gray-50 p-3 rounded-xl">
                 <p className="text-sm">
                   <strong>Categoría:</strong> {transactionToDelete.category}
                 </p>
@@ -365,17 +383,18 @@ export default function Gastos() {
                 </p>
               </div>
             )}
-            <div className="flex gap-3 justify-end pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
               <Button
                 variant="secondary"
                 onClick={() => {
                   setDeleteConfirmOpen(false);
                   setTransactionToDelete(null);
                 }}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
-              <Button variant="danger" onClick={handleDelete}>
+              <Button variant="danger" onClick={handleDelete} className="w-full sm:w-auto">
                 Eliminar
               </Button>
             </div>

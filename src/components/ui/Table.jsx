@@ -1,6 +1,6 @@
 export function Table({ children, className = '' }) {
   return (
-    <div className={`overflow-x-auto rounded-xl border border-purple-100 ${className}`}>
+    <div className={`overflow-x-auto rounded-xl border border-purple-100 -mx-2 lg:mx-0 px-2 lg:px-0 ${className}`}>
       <table className="min-w-full divide-y divide-purple-100">
         {children}
       </table>
@@ -34,7 +34,7 @@ export function TableRow({ children, className = '' }) {
 
 export function TableHead({ children, className = '' }) {
   return (
-    <th className={`px-6 py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider ${className}`}>
+    <th className={`px-4 lg:px-6 py-3 lg:py-4 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider whitespace-nowrap ${className}`}>
       {children}
     </th>
   );
@@ -42,7 +42,7 @@ export function TableHead({ children, className = '' }) {
 
 export function TableCell({ children, className = '' }) {
   return (
-    <td className={`px-6 py-4 text-sm text-slate-700 whitespace-nowrap ${className}`}>
+    <td className={`px-4 lg:px-6 py-3 lg:py-4 text-sm text-slate-700 ${className}`}>
       {children}
     </td>
   );

@@ -8,7 +8,7 @@ export function Button({
   className = '',
   ...props 
 }) {
-  const baseStyles = 'font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95';
+  const baseStyles = 'font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 touch-manipulation';
   
   const variantStyles = {
     primary: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 focus:ring-indigo-500',
@@ -20,8 +20,8 @@ export function Button({
   
   const sizeStyles = {
     sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg',
+    md: 'px-5 py-3 text-base',
+    lg: 'px-6 py-4 text-lg',
   };
   
   return (

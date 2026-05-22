@@ -66,13 +66,13 @@ export default function Dashboard() {
   const getTransactionTypeIcon = (type) => {
     if (type === 'income') {
       return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
       );
     }
     return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
       </svg>
     );
@@ -81,10 +81,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white/60 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+              <div key={i} className="bg-white/60 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-4 lg:p-6">
                 <Loading />
               </div>
             ))}
@@ -97,23 +97,23 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* Header */}
-        <div className="pt-2 lg:pt-0">
-          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <div className="pt-1 lg:pt-0">
+          <h1 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             Dashboard
           </h1>
-          <p className="text-slate-600 mt-2 text-base lg:text-lg">Resumen de tus movimientos del día</p>
+          <p className="text-slate-600 mt-1 lg:mt-2 text-sm lg:text-lg">Resumen de tus movimientos del día</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-6">
           <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Ingresos del día</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Ingresos del día</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl lg:text-4xl font-bold text-emerald-600">
+              <div className="text-2xl lg:text-4xl font-bold text-emerald-600">
                 {formatCurrency(summary.income)}
               </div>
             </CardContent>
@@ -121,10 +121,10 @@ export default function Dashboard() {
 
           <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Gastos del día</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Gastos del día</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl lg:text-4xl font-bold text-red-600">
+              <div className="text-2xl lg:text-4xl font-bold text-red-600">
                 {formatCurrency(summary.expense)}
               </div>
             </CardContent>
@@ -132,10 +132,10 @@ export default function Dashboard() {
 
           <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Balance del día</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Balance del día</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl lg:text-4xl font-bold ${summary.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              <div className={`text-2xl lg:text-4xl font-bold ${summary.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 {formatCurrency(summary.balance)}
               </div>
             </CardContent>
@@ -145,13 +145,13 @@ export default function Dashboard() {
         {/* Recent Transactions */}
         <Card>
           <CardHeader>
-            <CardTitle>Últimos movimientos</CardTitle>
+            <CardTitle className="text-base lg:text-xl">Últimos movimientos</CardTitle>
           </CardHeader>
           <CardContent>
             {recentTransactions.length === 0 ? (
               <EmptyState
                 icon={
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 }
@@ -180,11 +180,11 @@ export default function Dashboard() {
                       <TableCell>
                         <div className={`flex items-center gap-2 ${getTransactionTypeColor(transaction.type)}`}>
                           {getTransactionTypeIcon(transaction.type)}
-                          <span className="capitalize">{transaction.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
+                          <span className="capitalize text-xs lg:text-sm">{transaction.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className="capitalize">{transaction.category}</span>
+                        <span className="capitalize text-xs lg:text-sm">{transaction.category}</span>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {transaction.description || '-'}

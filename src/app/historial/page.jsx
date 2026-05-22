@@ -71,13 +71,13 @@ export default function Historial() {
   const getTransactionTypeIcon = (type) => {
     if (type === 'income') {
       return (
-        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
       );
     }
     return (
-      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
       </svg>
     );
@@ -93,20 +93,22 @@ export default function Historial() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Historial</h1>
-          <p className="text-gray-600 mt-1">Busca y filtra tus movimientos</p>
+          <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Historial
+          </h1>
+          <p className="text-slate-600 mt-1 text-sm lg:text-base">Busca y filtra tus movimientos</p>
         </div>
 
         {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Filtros</CardTitle>
+            <CardTitle className="text-base lg:text-xl">Filtros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               <Input
                 label="Buscar"
                 name="search"
@@ -153,7 +155,7 @@ export default function Historial() {
         {/* Results */}
         <Card>
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="text-base lg:text-xl">
               Resultados ({transactions.length} movimientos)
             </CardTitle>
           </CardHeader>
@@ -161,7 +163,7 @@ export default function Historial() {
             {transactions.length === 0 ? (
               <EmptyState
                 icon={
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 lg:w-12 lg:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 }
@@ -173,9 +175,9 @@ export default function Historial() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Método de pago</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
+                    <TableHead className="hidden lg:table-cell">Descripción</TableHead>
+                    <TableHead className="hidden md:table-cell">Método</TableHead>
                     <TableHead>Monto</TableHead>
                     <TableHead>Fecha</TableHead>
                   </TableRow>
@@ -186,20 +188,20 @@ export default function Historial() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getTransactionTypeIcon(transaction.type)}
-                          <span className="capitalize">
+                          <span className="capitalize text-xs lg:text-sm">
                             {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(transaction.category)}`}>
                           {transaction.category}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {transaction.description || '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {transaction.paymentMethod || '-'}
                       </TableCell>
                       <TableCell className={transaction.type === 'income' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>

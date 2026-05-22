@@ -84,13 +84,13 @@ export default function Caja() {
   const getTransactionTypeIcon = (type) => {
     if (type === 'income') {
       return (
-        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
       );
     }
     return (
-      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 lg:w-5 lg:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
       </svg>
     );
@@ -99,10 +99,10 @@ export default function Caja() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+              <div key={i} className="bg-white/60 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-4 lg:p-6">
                 <Loading />
               </div>
             ))}
@@ -114,77 +114,81 @@ export default function Caja() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Caja Diaria</h1>
-            <p className="text-gray-600 mt-1">Resumen de movimientos del día</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={goToPreviousDay}>
-              ← Anterior
-            </Button>
-            <Button variant="secondary" onClick={goToToday}>
-              Hoy
-            </Button>
-            <Button variant="secondary" onClick={goToNextDay}>
-              Siguiente →
-            </Button>
+            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Caja Diaria
+            </h1>
+            <p className="text-slate-600 mt-1 text-sm lg:text-base">Resumen de movimientos del día</p>
           </div>
         </div>
 
-        {/* Date Selector */}
+        {/* Date Navigation */}
         <Card>
-          <CardContent className="pt-6">
-            <DateInput
-              label="Seleccionar fecha"
-              name="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
+          <CardContent className="pt-4 lg:pt-6">
+            <div className="space-y-4">
+              <DateInput
+                label="Seleccionar fecha"
+                name="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="secondary" onClick={goToPreviousDay} className="flex-1">
+                  ← Anterior
+                </Button>
+                <Button variant="secondary" onClick={goToToday} className="flex-1">
+                  Hoy
+                </Button>
+                <Button variant="secondary" onClick={goToNextDay} className="flex-1">
+                  Siguiente →
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-6">
+          <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Ingresos</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Ingresos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-2xl lg:text-3xl font-bold text-green-600">
                 {formatCurrency(summary.income)}
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs lg:text-sm text-gray-500 mt-2">
                 {summary.transactions.filter(t => t.type === 'income').length} operaciones
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Gastos</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Gastos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-600">
+              <div className="text-2xl lg:text-3xl font-bold text-red-600">
                 {formatCurrency(summary.expense)}
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs lg:text-sm text-gray-500 mt-2">
                 {summary.transactions.filter(t => t.type === 'expense').length} operaciones
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader>
-              <CardTitle>Balance</CardTitle>
+              <CardTitle className="text-base lg:text-xl">Balance</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl lg:text-3xl font-bold ${summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(summary.balance)}
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs lg:text-sm text-gray-500 mt-2">
                 Resultado del día
               </p>
             </CardContent>
@@ -194,21 +198,21 @@ export default function Caja() {
         {/* Daily Transactions */}
         <Card>
           <CardHeader>
-            <CardTitle>Movimientos del día</CardTitle>
+            <CardTitle className="text-base lg:text-xl">Movimientos del día</CardTitle>
           </CardHeader>
           <CardContent>
             {summary.transactions.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <p>No hay movimientos para esta fecha</p>
+                <p className="text-sm lg:text-base">No hay movimientos para esta fecha</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead>Método de pago</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
+                    <TableHead className="hidden lg:table-cell">Descripción</TableHead>
+                    <TableHead className="hidden md:table-cell">Método</TableHead>
                     <TableHead>Monto</TableHead>
                     <TableHead>Fecha</TableHead>
                   </TableRow>
@@ -219,20 +223,20 @@ export default function Caja() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getTransactionTypeIcon(transaction.type)}
-                          <span className="capitalize">
+                          <span className="capitalize text-xs lg:text-sm">
                             {transaction.type === 'income' ? 'Ingreso' : 'Gasto'}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(transaction.category)}`}>
                           {transaction.category}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {transaction.description || '-'}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {transaction.paymentMethod || '-'}
                       </TableCell>
                       <TableCell className={transaction.type === 'income' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
