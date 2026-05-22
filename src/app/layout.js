@@ -3,14 +3,11 @@ import "./globals.css";
 export const metadata = {
   title: "Gestor de Gastos",
   description: "Aplicación personal para registrar gastos, ingresos y controlar una caja diaria",
-  manifest: "/manifest.json",
-  themeColor: "#6366f1",
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    viewportFit: "cover"
   },
   icons: {
     icon: "/Logo.png",
@@ -32,7 +29,6 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
-        <meta name="theme-color" content="#6366f1" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         {children}

@@ -14,7 +14,7 @@ export function Select({
   return (
     <div className={`flex flex-col ${className}`}>
       {label && (
-        <label htmlFor={name} className="mb-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <label htmlFor={name} className="mb-2 text-sm font-semibold text-slate-800">
           {label}
           {required && <span className="text-rose-500 ml-1">*</span>}
         </label>
@@ -27,10 +27,10 @@ export function Select({
           onChange={onChange}
           required={required}
           disabled={disabled}
-          className={`w-full px-4 py-3 lg:py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 text-base lg:text-base appearance-none cursor-pointer
+          className={`w-full px-4 py-3 lg:py-3 border-2 rounded-xl focus:outline-none transition-all duration-200 text-base lg:text-base appearance-none cursor-pointer text-slate-900
             ${error 
               ? 'border-rose-400 bg-rose-50/50 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' 
-              : 'border-indigo-200 bg-gradient-to-br from-white/80 to-purple-50/50 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 focus:bg-gradient-to-br from-white to-purple-50/80'
+              : 'border-indigo-200 bg-gradient-to-br from-white/90 to-purple-50/70 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 focus:bg-gradient-to-br from-white to-purple-50/90'
             }
             ${disabled ? 'bg-slate-100 cursor-not-allowed opacity-50' : ''}
             placeholder:text-slate-400
@@ -39,9 +39,9 @@ export function Select({
           `}
           {...props}
         >
-          <option value="">{placeholder}</option>
+          <option value="" className="text-slate-900">{placeholder}</option>
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} className="text-slate-900">
               {option.label}
             </option>
           ))}

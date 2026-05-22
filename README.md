@@ -42,6 +42,35 @@ Aplicación personal para registrar gastos, ingresos y controlar una caja diaria
 - ✅ Toast notifications compactos
 - ✅ Navegación por gestos en móvil
 - ✅ Headers de tabla ocultos en móvil cuando es necesario
+- 🚀 **Mobile-First** - Diseñado específicamente para ofrecer la mejor experiencia en dispositivos móviles
+
+## 📱 Optimizaciones Móviles
+
+### Experiencia de Usuario Móvil
+- ✅ **Enfoque Mobile-First** - Diseño pensado desde móviles hacia desktop
+- ✅ **Botones Táctiles** - Mínimo 44x44px para mejor toque
+- ✅ **Inputs Optimizados** - Fuente de 16px para prevenir zoom en iOS
+- ✅ **Sin Zoom Accidental** - Configuración de viewport y inputs
+- ✅ **Sidebar Colapsable** - Menú hamburguesa elegante
+- ✅ **Botón FAB** - Botón flotante para acciones rápidas
+- ✅ **Gestos Touch** - Feedback visual al tocar elementos
+- ✅ **Scroll Suave** - Desplazamiento con inercia nativa
+- ✅ **Safe Areas** - Soporte para dispositivos con notch
+
+### Responsive Breakpoints
+- **Mobile**: < 768px (Sidebar colapsado, tabla scroll, FAB activo)
+- **Tablet**: 768px - 1024px (Grid adaptativo, elementos táctiles)
+- **Desktop**: > 1024px (Sidebar fijo, diseño completo)
+
+### Optimizaciones de UI para Móvil
+- ✅ Tablas con scroll horizontal
+- ✅ Grid de tarjetas adaptativo (1 col móvil, 2 tablet, 3 desktop)
+- ✅ Textos escalados (base en móvil, aumentados en desktop)
+- ✅ Espaciado ajustado (más compacto en móvil)
+- ✅ Modales optimizados para pantallas pequeñas
+- ✅ Toast notifications compactos
+- ✅ Navegación por gestos en móvil
+- ✅ Headers de tabla ocultos en móvil cuando es necesario
 
 ## 🎨 Diseño y UX - Versión 2.0
 
@@ -325,10 +354,38 @@ El modelo `Transaction` tiene los siguientes campos:
 - ✅ Safe areas para dispositivos con notch
 - ✅ Sin selección de texto en botones
 - ✅ Focus states para accesibilidad
+- ✅ Botones táctiles optimizados (44x44px mínimo)
+- ✅ Inputs con 16px para prevenir zoom iOS
+- ✅ Botón FAB en móvil para acciones rápidas
+- ✅ Safe areas para dispositivos con notch
+- ✅ Sin selección de texto en botones
+- ✅ Focus states para accesibilidad
 
 ## 🔧 Configuración de CORS
 
 La API tiene CORS completamente configurado para permitir integraciones externas. Todos los endpoints incluyen los headers necesarios para cross-origin requests.
+
+## 📱 Características Específicas Móviles
+
+### Navegación Móvil
+- **Sidebar**: Menú hamburguesa con overlay
+- **FAB Button**: Botón flotante (+) para crear nuevos registros
+- **Navegación por gestos**: Swipe natural en listas
+- **Scroll horizontal**: En tablas para móviles
+
+### Formularios Móviles
+- **Inputs**: 16px de fuente para evitar zoom
+- **Botones**: Mínimo 44x44px para mejor toque
+- **Selects**: Optimizados para touch
+- **Modales**: Full-height en móvil si es necesario
+- **Feedback visual**: Estados active/instantáneos
+
+### Optimizaciones de Performance
+- **Carga diferida**: Componentes cargan según necesidad
+- **Skeletons**: Indicadores de carga mientras cargan datos
+- **Optimización de imágenes**: Logo optimizado
+- **Lazy loading**: En componentes grandes
+- **CSS optimizado**: Animaciones hardware-acceleradas
 
 ## 📱 Características Específicas Móviles
 
