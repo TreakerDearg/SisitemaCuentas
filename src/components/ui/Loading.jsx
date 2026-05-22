@@ -1,3 +1,5 @@
+'use client';
+
 export function Loading({ size = 'md', text = 'Cargando...' }) {
   const sizeStyles = {
     sm: 'w-5 h-5 lg:w-6 lg:h-6',

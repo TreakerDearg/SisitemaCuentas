@@ -1,3 +1,5 @@
+'use client';
+
 export function Card({ children, className = '' }) {
   return (
     <div className={`glass-gradient rounded-2xl shadow-xl border border-white/40 card-hover ${className}`}>

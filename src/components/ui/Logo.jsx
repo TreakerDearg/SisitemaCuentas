@@ -1,3 +1,5 @@
+'use client';
+
 export function Logo({ size = 'md' }) {
   const sizeStyles = {
     sm: 'w-8 h-8',

@@ -1,3 +1,5 @@
+'use client';
+
 export function Table({ children, className = '' }) {
   return (
     <div className={`overflow-x-auto rounded-2xl border border-indigo-100/50 -mx-2 lg:mx-0 px-2 lg:px-0 ${className}`}>
