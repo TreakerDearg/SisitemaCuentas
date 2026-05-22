@@ -63,3 +63,69 @@ export function Input({
     </div>
   );
 }
+
+export function NumberInput({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  placeholder = "",
+  required = false,
+  disabled = false,
+  className = '',
+  error = '',
+  min = 0,
+  max,
+  step = "0.01",
+  ...props 
+}) {
+  return (
+    <Input 
+      label={label}
+      name={name}
+      type="number"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      disabled={disabled}
+      className={className}
+      error={error}
+      min={min}
+      max={max}
+      step={step}
+      {...props}
+    />
+  );
+}
+
+export function DateInput({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  required = false,
+  disabled = false,
+  className = '',
+  error = '',
+  min,
+  max,
+  ...props 
+}) {
+  return (
+    <Input 
+      label={label}
+      name={name}
+      type="date"
+      value={value}
+      onChange={onChange}
+      required={required}
+      disabled={disabled}
+      className={className}
+      error={error}
+      min={min}
+      max={max}
+      {...props}
+    />
+  );
+}
