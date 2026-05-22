@@ -23,7 +23,7 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-2 left-2 z-50 p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+        className="lg:hidden fixed top-2 left-2 z-50 p-3 gradient-primary text-white rounded-2xl shadow-glow-sm button-hover active:scale-95"
         aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,8 +37,8 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 z-40
-        transform transition-transform duration-300 ease-in-out shadow-2xl
+        fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-900 via-indigo-900 to-purple-900 z-40
+        transform transition-transform duration-300 ease-in-out shadow-2xl shadow-glow
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static
       `}>
@@ -49,7 +49,7 @@ export function Sidebar() {
               <LogoWithImage src="/Logo.png" size="md" alt="Gestor de Gastos" />
               <div>
                 <h1 className="text-lg lg:text-xl font-bold text-white">Gestor</h1>
-                <p className="text-xs text-purple-200">de Gastos</p>
+                <p className="text-xs text-indigo-200">de Gastos</p>
               </div>
             </div>
           </div>
@@ -66,12 +66,12 @@ export function Sidebar() {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                     ${isActive 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg scale-[1.02]' 
+                      ? 'gradient-primary text-white shadow-glow-sm scale-[1.02]' 
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                     }
                   `}
                 >
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-purple-300'}`} />
+                  <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-indigo-300'}`} />
                   <span className="font-medium text-sm lg:text-base">{item.name}</span>
                 </Link>
               );
@@ -92,7 +92,7 @@ export function Sidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-gradient-to-b from-slate-900/80 to-purple-900/80 backdrop-blur-md z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}

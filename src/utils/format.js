@@ -54,7 +54,6 @@ export function getTodayDate() {
 export function parseCurrency(value) {
   if (!value) return 0;
   
-  // Remove currency symbols and non-numeric characters except decimal point
   const cleaned = value.toString()
     .replace(/[^\d.,-]/g, '')
     .replace(',', '.');
@@ -64,15 +63,15 @@ export function parseCurrency(value) {
 
 export function getCategoryColor(category) {
   const colors = {
-    'efectivo': 'bg-gradient-to-r from-emerald-400 to-green-500 text-white',
-    'transferencia': 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white',
-    'alquiler': 'bg-gradient-to-r from-purple-400 to-violet-500 text-white',
-    'combustible': 'bg-gradient-to-r from-red-400 to-rose-500 text-white',
-    'mantenimiento': 'bg-gradient-to-r from-orange-400 to-amber-500 text-white',
-    'peajes': 'bg-gradient-to-r from-yellow-400 to-amber-400 text-white',
-    'compras': 'bg-gradient-to-r from-pink-400 to-rose-500 text-white',
-    'otros': 'bg-gradient-to-r from-slate-400 to-gray-500 text-white'
+    'efectivo': 'bg-gradient-to-r from-emerald-400 to-green-500 text-white shadow-md',
+    'transferencia': 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-md',
+    'alquiler': 'bg-gradient-to-r from-violet-400 to-purple-500 text-white shadow-md',
+    'combustible': 'bg-gradient-to-r from-rose-400 to-red-500 text-white shadow-md',
+    'mantenimiento': 'bg-gradient-to-r from-orange-400 to-amber-500 text-white shadow-md',
+    'peajes': 'bg-gradient-to-r from-yellow-400 to-amber-400 text-white shadow-md',
+    'compras': 'bg-gradient-to-r from-pink-400 to-rose-500 text-white shadow-md',
+    'otros': 'bg-gradient-to-r from-slate-400 to-gray-500 text-white shadow-md'
   };
   
-  return colors[category] || 'bg-gradient-to-r from-slate-400 to-gray-500 text-white';
+  return colors[category] || 'bg-gradient-to-r from-slate-400 to-gray-500 text-white shadow-md';
 }

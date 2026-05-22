@@ -11,7 +11,6 @@ export function useToast() {
     
     setToasts(prev => [...prev, toast]);
     
-    // Auto remove after 3 seconds
     setTimeout(() => {
       removeToast(id);
     }, 3000);
@@ -34,12 +33,12 @@ export function ToastContainer({ toasts, onRemove }) {
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`px-4 py-3 lg:px-6 lg:py-4 rounded-xl shadow-2xl text-white font-semibold text-sm lg:text-base
-            ${toast.type === 'success' ? 'bg-gradient-to-r from-emerald-500 to-green-600' : ''}
-            ${toast.type === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-600' : ''}
-            ${toast.type === 'warning' ? 'bg-gradient-to-r from-amber-500 to-orange-600' : ''}
-            ${toast.type === 'info' ? 'bg-gradient-to-r from-indigo-500 to-purple-600' : ''}
-            animate-slide-in backdrop-blur-xl border border-white/20
+          className={`px-4 py-3 lg:px-6 lg:py-4 rounded-xl shadow-2xl text-white font-semibold text-sm lg:text-base animate-scale-in
+            ${toast.type === 'success' ? 'gradient-success shadow-glow-sm' : ''}
+            ${toast.type === 'error' ? 'gradient-danger shadow-glow-sm' : ''}
+            ${toast.type === 'warning' ? 'gradient-warning shadow-glow-sm' : ''}
+            ${toast.type === 'info' ? 'gradient-primary shadow-glow-sm' : ''}
+            backdrop-blur-xl border border-white/20
           `}
         >
           <div className="flex items-center gap-2 lg:gap-3">

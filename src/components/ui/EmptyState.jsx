@@ -8,18 +8,18 @@ export function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center py-12 lg:py-16 px-4 text-center ${className}`}>
       {icon && (
-        <div className="text-purple-300 mb-4 lg:mb-6 p-3 lg:p-4 bg-purple-50 rounded-2xl">
+        <div className="text-indigo-300 mb-4 lg:mb-6 p-3 lg:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl animate-float">
           {icon}
         </div>
       )}
-      <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-2 lg:mb-3">
+      <h3 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 lg:mb-3">
         {title}
       </h3>
       <p className="text-sm lg:text-base text-slate-600 mb-4 lg:mb-6 max-w-sm leading-relaxed">
         {description}
       </p>
       {action && (
-        <div>
+        <div className="animate-fade-in">
           {action}
         </div>
       )}

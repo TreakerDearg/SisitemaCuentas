@@ -1,6 +1,6 @@
 export function Card({ children, className = '' }) {
   return (
-    <div className={`bg-white/80 backdrop-blur-lg rounded-2xl lg:rounded-2xl shadow-xl border border-white/20 ${className}`}>
+    <div className={`glass-gradient rounded-2xl shadow-xl border border-white/40 card-hover ${className}`}>
       {children}
     </div>
   );
@@ -8,7 +8,7 @@ export function Card({ children, className = '' }) {
 
 export function CardHeader({ children, className = '' }) {
   return (
-    <div className={`p-4 lg:p-6 border-b border-purple-100 ${className}`}>
+    <div className={`p-4 lg:p-6 border-b border-indigo-100/50 ${className}`}>
       {children}
     </div>
   );

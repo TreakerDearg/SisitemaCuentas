@@ -1,7 +1,7 @@
 export function Table({ children, className = '' }) {
   return (
-    <div className={`overflow-x-auto rounded-xl border border-purple-100 -mx-2 lg:mx-0 px-2 lg:px-0 ${className}`}>
-      <table className="min-w-full divide-y divide-purple-100">
+    <div className={`overflow-x-auto rounded-2xl border border-indigo-100/50 -mx-2 lg:mx-0 px-2 lg:px-0 ${className}`}>
+      <table className="min-w-full divide-y divide-indigo-100/50">
         {children}
       </table>
     </div>
@@ -18,7 +18,7 @@ export function TableHeader({ children, className = '' }) {
 
 export function TableBody({ children, className = '' }) {
   return (
-    <tbody className={`bg-white/60 backdrop-blur-lg divide-y divide-purple-100 ${className}`}>
+    <tbody className={`bg-gradient-to-b from-white/60 to-purple-50/30 backdrop-blur-sm divide-y divide-indigo-100/50 ${className}`}>
       {children}
     </tbody>
   );
@@ -26,7 +26,7 @@ export function TableBody({ children, className = '' }) {
 
 export function TableRow({ children, className = '' }) {
   return (
-    <tr className={`hover:bg-purple-50/50 transition-colors duration-200 ${className}`}>
+    <tr className={`hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 cursor-pointer ${className}`}>
       {children}
     </tr>
   );

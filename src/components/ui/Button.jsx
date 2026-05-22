@@ -8,14 +8,15 @@ export function Button({
   className = '',
   ...props 
 }) {
-  const baseStyles = 'font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 touch-manipulation';
+  const baseStyles = 'font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 touch-manipulation relative overflow-hidden';
   
   const variantStyles = {
-    primary: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 focus:ring-indigo-500',
-    secondary: 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 hover:from-slate-200 hover:to-slate-300 focus:ring-slate-500',
-    danger: 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus:ring-red-500',
-    success: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 focus:ring-emerald-500',
-    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100 focus:ring-slate-500 shadow-none hover:shadow-md',
+    primary: 'gradient-primary text-white shadow-glow-sm button-hover focus:ring-indigo-500/50',
+    secondary: 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 shadow-md button-hover focus:ring-slate-500/50 border border-slate-300',
+    danger: 'gradient-danger text-white shadow-glow-sm button-hover focus:ring-rose-500/50',
+    success: 'gradient-success text-white shadow-glow-sm button-hover focus:ring-emerald-500/50',
+    ghost: 'bg-transparent text-slate-700 hover:bg-slate-100/50 button-hover focus:ring-slate-500/50 border border-transparent',
+    outline: 'bg-transparent text-indigo-600 border-2 border-indigo-500 button-hover hover:bg-indigo-50 focus:ring-indigo-500/50',
   };
   
   const sizeStyles = {
@@ -29,10 +30,13 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabled ? 'opacity-50 cursor-not-allowed transform-none' : ''} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabled ? 'opacity-50 cursor-not-allowed transform-none shadow-none' : ''} ${className}`}
       {...props}
     >
-      {children}
+      <span className="relative z-10">{children}</span>
+      {!disabled && (
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/20 opacity-0 transition-opacity duration-200 hover:opacity-100" />
+      )}
     </button>
   );
 }

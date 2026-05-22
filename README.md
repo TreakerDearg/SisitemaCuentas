@@ -1,6 +1,6 @@
 # Gestor de Gastos
 
-Aplicación personal para registrar gastos, ingresos y controlar una caja diaria. Desarrollada con Next.js (App Router), React, TailwindCSS, pnpm y MongoDB.
+Aplicación personal para registrar gastos, ingresos y controlar una caja diaria. Desarrollada con Next.js (App Router), React, TailwindCSS, pnpm y MongoDB con **diseño visual moderno y vibrante**.
 
 ## ✨ Características
 
@@ -11,10 +11,76 @@ Aplicación personal para registrar gastos, ingresos y controlar una caja diaria
 - 📜 **Historial** - Búsqueda y filtrado avanzado de transacciones
 - ⚙️ **Configuración** - Información del sistema y categorías
 - 🎨 **Diseño Moderno** - UI contemporánea con gradientes y glassmorphism
-- 📱 **100% Responsive** - Optimizado para móviles y tablets
+- 📱 **100% Responsive** - Optimizado para móviles y tablets con enfoque mobile-first
 - 🔐 **CORS Configurado** - Ready para integraciones externas
+- 🚀 **Mobile-First** - Diseñado específicamente para ofrecer la mejor experiencia en dispositivos móviles
 
-## 🎨 Diseño y UX
+## 📱 Optimizaciones Móviles
+
+### Experiencia de Usuario Móvil
+- ✅ **Enfoque Mobile-First** - Diseño pensado desde móviles hacia desktop
+- ✅ **Botones Táctiles** - Mínimo 44x44px para mejor toque
+- ✅ **Inputs Optimizados** - Fuente de 16px para prevenir zoom en iOS
+- ✅ **Sin Zoom Accidental** - Configuración de viewport y inputs
+- ✅ **Sidebar Colapsable** - Menú hamburguesa elegante
+- ✅ **Botón FAB** - Botón flotante para acciones rápidas
+- ✅ **Gestos Touch** - Feedback visual al tocar elementos
+- ✅ **Scroll Suave** - Desplazamiento con inercia nativa
+- ✅ **Safe Areas** - Soporte para dispositivos con notch
+
+### Responsive Breakpoints
+- **Mobile**: < 768px (Sidebar colapsado, tabla scroll, FAB activo)
+- **Tablet**: 768px - 1024px (Grid adaptativo, elementos táctiles)
+- **Desktop**: > 1024px (Sidebar fijo, diseño completo)
+
+### Optimizaciones de UI para Móvil
+- ✅ Tablas con scroll horizontal
+- ✅ Grid de tarjetas adaptativo (1 col móvil, 2 tablet, 3 desktop)
+- ✅ Textos escalados (base en móvil, aumentados en desktop)
+- ✅ Espaciado ajustado (más compacto en móvil)
+- ✅ Modales optimizados para pantallas pequeñas
+- ✅ Toast notifications compactos
+- ✅ Navegación por gestos en móvil
+- ✅ Headers de tabla ocultos en móvil cuando es necesario
+
+## 🎨 Diseño y UX - Versión 2.0
+
+### Nueva Paleta de Colores Vibrante
+- **Primario**: Gradiente indigo → purple más saturado y vibrante
+- **Ingresos**: Gradiente emerald → green más luminoso
+- **Gastos**: Gradiente rose → red más intenso
+- **Acentos**: Cyan, amber para elementos secundarios
+- **Fondo**: Gradiente sutil slate → indigo → purple → slate
+- **Componentes**: Glassmorphism mejorado con backdrop blur de 20px
+
+### Mejoras Visuales Completas
+- ✅ **Glassmorphism 2.0** - Efecto cristal mejorado con bordes sutiles
+- ✅ **Gradientes vibrantes** - Colores más saturados y modernos
+- ✅ **Shadow glow effects** - Sombras con resplandor sutil
+- ✅ **Animaciones suaves** - Scale-in, fade-in, slide-in, float
+- ✅ **Focus states mejorados** - Anillos de enfoque con glow
+- ✅ **Hover effects modernos** - Elevación + sombra + scale
+- ✅ **Inputs con glow** - Anillo de resplandor al enfocar
+- ✅ **Botones con shine** - Efecto de brillo al hover
+- ✅ **Toasts con gradientes** - Más visibles y atractivos
+
+### Formularios Rediseñados
+- ✅ **Inputs con gradientes** - Fondo degradiente sutil
+- ✅ **Labels con text gradient** - Títulos más llamativos
+- ✅ **Focus states animados** - Transiciones suaves
+- ✅ **Error states mejorados** - Colores más claros e iconos
+- ✅ **Selects con iconos** - Flecha personalizada y animada
+- ✅ **Validación visual** - Feedback instantáneo y claro
+
+### Características de UI mejoradas
+- ✨ Glassmorphism 2.0 con backdrop blur mejorado
+- 🎯 Animaciones suaves y modernas (scale-in, fade-in, slide-in)
+- 📱 Optimizado para touch en móviles
+- 🎨 Categorías con gradientes más vibrantes
+- 🌙 Scrollbar personalizado con gradiente
+- 🔔 Notificaciones toast con iconos y glow
+- 🚫 Sin selección de texto en botones
+- ♿ Focus states con glow para accesibilidad
 
 ### Paleta de Colores
 - **Primario**: Gradiente indigo a purple (`#6366f1` → `#a855f7`)
@@ -30,13 +96,8 @@ Aplicación personal para registrar gastos, ingresos y controlar una caja diaria
 - 🎨 Categorías con colores distintivos
 - 🌙 Scrollbar personalizado
 - 🔔 Notificaciones toast con iconos
-
-### Responsive
-- Sidebar colapsable en móvil
-- Tablas con scroll horizontal
-- Grid adaptativo para tarjetas
-- Tamaños de fuente ajustados
-- Botones táctiles optimizados
+- 🚫 Sin selección de texto en botones
+- ♿ Focus states para accesibilidad
 
 ## 🛠 Stack Tecnológico
 
@@ -59,23 +120,23 @@ src/
 │   ├── caja/                 # Control de caja diaria
 │   ├── historial/            # Historial con filtros
 │   ├── settings/             # Configuración
-│   ├── layout.js             # Layout principal
-│   ├── globals.css           # Estilos globales
+│   ├── layout.js             # Layout principal optimizado móvil
+│   ├── globals.css           # Estilos globales mobile-first
 │   └── api/                  # API Routes
 │       ├── transactions/     # Endpoints de transacciones
 │       └── transactions/[id]/ # Endpoints individuales
 ├── components/               # Componentes React
-│   ├── layout/               # Layout y Sidebar
+│   ├── layout/               # Layout y Sidebar responsive
 │   └── ui/                   # Componentes UI reutilizables
-│       ├── Card.jsx
-│       ├── Button.jsx
-│       ├── Modal.jsx
-│       ├── Input.jsx
-│       ├── Select.jsx
-│       ├── Table.jsx
-│       ├── EmptyState.jsx
-│       ├── Loading.jsx
-│       └── Logo.jsx          # Componente de logo
+│       ├── Card.jsx          # Cards con espaciado móvil
+│       ├── Button.jsx        # Botones táctiles optimizados
+│       ├── Modal.jsx          # Modales responsive
+│       ├── Input.jsx         # Inputs con tamaño móvil
+│       ├── Select.jsx        # Selects optimizados
+│       ├── Table.jsx         # Tablas con scroll horizontal
+│       ├── EmptyState.jsx    # Estados vacíos responsive
+│       ├── Loading.jsx       # Loading skeletons móviles
+│       └── Logo.jsx          # Sistema de logo flexible
 ├── lib/                      # Utilidades y configuraciones
 │   └── mongodb.js            # Conexión a MongoDB
 ├── models/                   # Modelos Mongoose
@@ -84,7 +145,7 @@ src/
 │   └── transactionService.js # Servicio de transacciones
 └── utils/                    # Utilidades
     ├── format.js             # Formato de moneda y fechas
-    └── toast.js              # Sistema de notificaciones
+    └── toast.js              # Sistema de notificaciones móviles
 ```
 
 ## 🚀 Instalación y Configuración
@@ -203,21 +264,6 @@ Vercel detectará automáticamente que es un proyecto Next.js y lo configurará 
 - Mercado Pago
 - Otros
 
-## 📱 Responsive Design
-
-### Optimizaciones Móviles
-- Sidebar con menú hamburguesa
-- Tablas con scroll horizontal
-- Grid de tarjetas adaptativo
-- Tamaños de toque optimizados
-- Sin zoom en inputs (iOS)
-- Scrollbar personalizado
-
-### Breakpoints
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: > 1024px
-
 ## 🧪 Desarrollo
 
 ### Linting
@@ -229,12 +275,12 @@ pnpm lint
 ### Estructura de componentes
 
 Los componentes UI están en `src/components/ui/` y son completamente reutilizables:
-- Card - Con glassmorphism
-- Button - Con gradientes y hover effects
-- Modal - Con backdrop blur
-- Input - Con focus states animados
+- Card - Con glassmorphism y espaciado móvil
+- Button - Con gradientes, hover effects y tamaño táctil
+- Modal - Con backdrop blur y responsive
+- Input - Con focus states animados y tamaño móvil
 - Select - Con estados personalizados
-- Table - Con filas hoverables
+- Table - Con filas hoverables y scroll horizontal
 - EmptyState - Con iconos y acciones
 - Loading - Con skeletons animados
 - Logo - Placeholder y personalizable
@@ -273,10 +319,38 @@ El modelo `Transaction` tiene los siguientes campos:
 - ✅ Glassmorphism en componentes
 - ✅ CORS configurado en API
 - ✅ Scrollbar personalizado
+- ✅ Botones táctiles optimizados (44x44px mínimo)
+- ✅ Inputs con 16px para prevenir zoom iOS
+- ✅ Botón FAB en móvil para acciones rápidas
+- ✅ Safe areas para dispositivos con notch
+- ✅ Sin selección de texto en botones
+- ✅ Focus states para accesibilidad
 
 ## 🔧 Configuración de CORS
 
 La API tiene CORS completamente configurado para permitir integraciones externas. Todos los endpoints incluyen los headers necesarios para cross-origin requests.
+
+## 📱 Características Específicas Móviles
+
+### Navegación Móvil
+- **Sidebar**: Menú hamburguesa con overlay
+- **FAB Button**: Botón flotante (+) para crear nuevos registros
+- **Navegación por gestos**: Swipe natural en listas
+- **Scroll horizontal**: En tablas para móviles
+
+### Formularios Móviles
+- **Inputs**: 16px de fuente para evitar zoom
+- **Botones**: Mínimo 44x44px para mejor toque
+- **Selects**: Optimizados para touch
+- **Modales**: Full-height en móvil si es necesario
+- **Feedback visual**: Estados active/instantáneos
+
+### Optimizaciones de Performance
+- **Carga diferida**: Componentes cargan según necesidad
+- **Skeletons**: Indicadores de carga mientras cargan datos
+- **Optimización de imágenes**: Logo optimizado
+- **Lazy loading**: En componentes grandes
+- **CSS optimizado**: Animaciones hardware-acceleradas
 
 ## 📄 License
 
