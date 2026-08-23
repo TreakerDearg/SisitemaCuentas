@@ -1,22 +1,27 @@
 {
   "name": "Gestor de Gastos",
-  "short_name": "Gestor",
-  "description": "Aplicación personal para registrar gastos, ingresos y controlar una caja diaria",
+  "short_name": "Gastos",
+  "description": "Control de caja, jornadas, ingresos y gastos",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#6366f1",
   "orientation": "portrait",
+  "background_color": "#0B0F14",
+  "theme_color": "#0B0F14",
   "icons": [
     {
       "src": "/Logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/Logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["finance", "productivity"],
+  "lang": "es",
+  "dir": "ltr"
 }
