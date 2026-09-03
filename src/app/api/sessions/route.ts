@@ -11,6 +11,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { vehicleId, initialCash, initialKm, date, startTime, notes } = body;
 
+    // Log del body recibido para diagnóstico en producción
+    console.info('[SESSION_CREATE] Body recibido:', JSON.stringify({
+      vehicleId: vehicleId ? `${String(vehicleId).slice(0, 8)}...` : 'VACÍO',
+      initialCash,
+      initialKm,
+      date,
+      startTime: startTime ? 'presente' : 'VACÍO',
+      hasNotes: !!notes,
+    }));
+
     // ── Validaciones con mensajes específicos ────────────────
     if (!vehicleId) {
       return NextResponse.json(
