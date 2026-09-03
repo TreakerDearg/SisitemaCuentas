@@ -41,24 +41,31 @@ async function apiFetch<T>(
 // ─── Sessions ─────────────────────────────────
 
 export async function getActiveSession(): Promise<ActiveSessionData | null> {
-  try {
-    return await apiFetch<ActiveSessionData>('/api/sessions/active');
-  } catch {
-    return null;
+  const res = await fetch('/api/sessions/active', {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  // 404 = no hay jornada activa (respuesta esperada y válida)
+  if (res.status === 404) return null;
+
+  const json: ApiResponse<ActiveSessionData> = await res.json();
+
+  if (!json.success || !res.ok) {
+    // Re-lanzar para que el llamador pueda distinguir entre "no hay jornada" y "error"
+    throw new Error(json.error ?? `Error ${res.status}`);
   }
+
+  return json.data as ActiveSessionData;
 }
 
 /**
  * Genera un ID de idempotencia para prevenir transacciones duplicadas.
- * Formato: timestamp_random (no necesita crypto fuerte, solo unicidad práctica).
  */
 export function generateRequestId(): string {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export async function getSessions(): Promise<WorkSession[]> {
-  return apiFetch<WorkSession[]>('/api/sessions');
-}
+// getSessions() eliminada — reemplazada por getSessionsHistory() que devuelve { data, meta }
 
 export async function createSession(
   payload: CreateSessionPayload

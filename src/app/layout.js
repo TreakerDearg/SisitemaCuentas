@@ -5,7 +5,9 @@ import ConnectionBanner from "@/components/ui/ConnectionBanner";
 export const metadata = {
   title: "Gestor de Gastos",
   description: "Aplicación personal para registrar gastos, ingresos y controlar una caja diaria",
-  manifest: "/manifest.json",
+  // Next.js sirve /manifest.webmanifest desde src/app/manifest.ts
+  // Esto evita que Vercel SSO intercepte el archivo estático de public/
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/Logo.png",
     apple: "/Logo.png",

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Transaction from '@/models/Transaction';
 import WorkSession from '@/models/WorkSession';
+// Necesario para que Mongoose pueda resolver populate('category') en serverless
+import '@/models/ExpenseCategory';
 
 // GET /api/transactions/:id
 export async function GET(

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import WorkSession from '@/models/WorkSession';
 import Vehicle from '@/models/Vehicle';
-import Transaction from '@/models/Transaction';
-import { calculateSessionSummary } from '@/lib/calculations';
 
 // POST /api/sessions - Crear nueva jornada
 export async function POST(request: NextRequest) {
@@ -13,64 +11,108 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { vehicleId, initialCash, initialKm, date, startTime, notes } = body;
 
-    // Validaciones — usar comprobación explícita para no rechazar 0
-    if (
-      !vehicleId ||
-      initialCash === undefined ||
-      initialCash === null ||
-      initialKm === undefined ||
-      initialKm === null ||
-      !date ||
-      !startTime
-    ) {
+    // ── Validaciones con mensajes específicos ────────────────
+    if (!vehicleId) {
       return NextResponse.json(
-        { success: false, error: 'Faltan campos obligatorios' },
+        { success: false, error: 'Falta seleccionar un vehículo.' },
+        { status: 400 }
+      );
+    }
+    if (initialCash === undefined || initialCash === null || initialCash === '') {
+      return NextResponse.json(
+        { success: false, error: 'Falta el dinero inicial (puede ser 0).' },
+        { status: 400 }
+      );
+    }
+    if (initialKm === undefined || initialKm === null || initialKm === '') {
+      return NextResponse.json(
+        { success: false, error: 'Falta el KM inicial.' },
+        { status: 400 }
+      );
+    }
+    if (!date) {
+      return NextResponse.json(
+        { success: false, error: 'Falta la fecha de inicio.' },
+        { status: 400 }
+      );
+    }
+    if (!startTime) {
+      return NextResponse.json(
+        { success: false, error: 'Falta la hora de inicio.' },
+        { status: 400 }
+      );
+    }
+    if (Number(initialCash) < 0) {
+      return NextResponse.json(
+        { success: false, error: 'El dinero inicial no puede ser negativo.' },
+        { status: 400 }
+      );
+    }
+    if (Number(initialKm) < 0) {
+      return NextResponse.json(
+        { success: false, error: 'El KM inicial no puede ser negativo.' },
         { status: 400 }
       );
     }
 
-    if (initialCash < 0 || initialKm < 0) {
-      return NextResponse.json(
-        { success: false, error: 'initialCash e initialKm deben ser >= 0' },
-        { status: 400 }
-      );
-    }
-
-    // Validar que el vehículo existe
+    // ── Validar vehículo ─────────────────────────────────────
     const vehicle = await Vehicle.findById(vehicleId);
     if (!vehicle) {
       return NextResponse.json(
-        { success: false, error: 'Vehículo no encontrado' },
+        { success: false, error: `Vehículo no encontrado (id: ${vehicleId}).` },
         { status: 404 }
       );
     }
 
-    // Regla 1: Verificar que no existe otra jornada abierta
+    // ── Regla de negocio: una sola jornada activa ────────────
     const openSession = await WorkSession.findOne({ status: 'open' });
     if (openSession) {
       return NextResponse.json(
-        { success: false, error: 'Ya existe una jornada abierta' },
+        {
+          success: false,
+          error: 'Ya existe una jornada abierta.',
+          code: 'SESSION_ALREADY_ACTIVE',
+          data: { existingSessionId: openSession._id },
+        },
+        { status: 409 }
+      );
+    }
+
+    // ── Parsear fechas de forma robusta ──────────────────────
+    const parsedDate = new Date(date);
+    const parsedStartTime = new Date(startTime);
+
+    if (isNaN(parsedDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: `Fecha inválida: "${date}".` },
+        { status: 400 }
+      );
+    }
+    if (isNaN(parsedStartTime.getTime())) {
+      return NextResponse.json(
+        { success: false, error: `Hora de inicio inválida: "${startTime}".` },
         { status: 400 }
       );
     }
 
     const session = await WorkSession.create({
       vehicleId,
-      initialCash,
-      initialKm,
-      date: new Date(date),
-      startTime: new Date(startTime),
-      notes,
+      initialCash: Number(initialCash),
+      initialKm: Number(initialKm),
+      date: parsedDate,
+      startTime: parsedStartTime,
+      notes: notes?.trim() || undefined,
     });
 
+    console.info(`[SESSION_CREATE] New session ${session._id} for vehicle ${vehicleId}`);
     return NextResponse.json(
       { success: true, data: session },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating session:', error);
+    console.error('[SESSION_CREATE] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Error al crear jornada' },
+      { success: false, error: 'Error al crear jornada. Intentá nuevamente.' },
       { status: 500 }
     );
   }

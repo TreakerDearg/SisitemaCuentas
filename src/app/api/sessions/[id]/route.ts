@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import WorkSession from '@/models/WorkSession';
 import Transaction from '@/models/Transaction';
 import { calculateSessionSummary } from '@/lib/calculations';
+// Necesario para que Mongoose pueda resolver populate('category') en serverless
+import '@/models/ExpenseCategory';
 
 // GET /api/sessions/:id - Obtener jornada específica
 export async function GET(
