@@ -6,7 +6,6 @@ interface MongooseCache {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongoose: MongooseCache | undefined;
 }
 
@@ -40,6 +39,10 @@ async function connectDB(): Promise<typeof mongoose> {
   if (!cached.promise) {
     cached.promise = mongoose.connect(uri, {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 8_000,
+      connectTimeoutMS: 8_000,
+      socketTimeoutMS: 15_000,
+      maxPoolSize: 10,
     });
   }
 

@@ -10,6 +10,7 @@ export interface ITransaction {
   description?: string;
   /** Clave de idempotencia generada por el cliente para prevenir duplicados */
   clientRequestId?: string;
+  revision: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +53,12 @@ const TransactionSchema = new Schema<ITransaction>(
       type: String,
       index: true,
       sparse: true, // solo indexa documentos que lo tengan
+    },
+    revision: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
     },
   },
   {

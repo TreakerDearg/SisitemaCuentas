@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name, brand, model, year, plate } = body;
+    const { name, brand, model, year, plate, clientRequestId } = body;
 
     // Validaciones
     if (!name || !brand || !model || !year || !plate) {
@@ -18,12 +18,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (clientRequestId) {
+      const existing = await Vehicle.findOne({ clientRequestId });
+      if (existing) return NextResponse.json({ success: true, data: existing }, { status: 200 });
+    }
+
     const vehicle = await Vehicle.create({
       name,
       brand,
       model,
       year,
       plate,
+      clientRequestId: clientRequestId || undefined,
     });
 
     return NextResponse.json(

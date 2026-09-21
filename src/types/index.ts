@@ -12,6 +12,7 @@ export interface Vehicle {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  revision: number;
 }
 
 export interface ExpenseCategory {
@@ -20,6 +21,7 @@ export interface ExpenseCategory {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  revision: number;
 }
 
 export interface Transaction {
@@ -33,6 +35,7 @@ export interface Transaction {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  revision: number;
 }
 
 export interface WorkSession {
@@ -46,6 +49,8 @@ export interface WorkSession {
   initialKm: number;
   finalKm?: number;
   notes?: string;
+  clientRequestId?: string;
+  revision: number;
   createdAt: string;
   updatedAt: string;
 }

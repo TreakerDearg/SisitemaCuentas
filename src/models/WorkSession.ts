@@ -10,6 +10,8 @@ export interface IWorkSession {
   initialKm: number;
   finalKm?: number;
   notes?: string;
+  clientRequestId?: string;
+  revision: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,6 +56,18 @@ const WorkSessionSchema = new Schema<IWorkSession>(
     },
     notes: {
       type: String,
+    },
+    clientRequestId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    revision: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
     },
   },
   {

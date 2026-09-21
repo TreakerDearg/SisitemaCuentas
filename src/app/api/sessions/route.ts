@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { vehicleId, initialCash, initialKm, date, startTime, notes } = body;
+    const { vehicleId, initialCash, initialKm, date, startTime, notes, clientRequestId } = body;
 
     // Log del body recibido para diagnóstico en producción
     console.info('[SESSION_CREATE] Body recibido:', JSON.stringify({
@@ -65,7 +65,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Validar vehículo ─────────────────────────────────────
+    // ── Idempotencia ───────────────────────────────────────────
+    if (clientRequestId) {
+      const existing = await WorkSession.findOne({ clientRequestId }).populate('vehicleId');
+      if (existing) return NextResponse.json({ success: true, data: existing }, { status: 200 });
+    }
+
+    // ── Verificar vehículo ─────────────────────────────────────
     const vehicle = await Vehicle.findById(vehicleId);
     if (!vehicle) {
       return NextResponse.json(
@@ -75,7 +81,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Regla de negocio: una sola jornada activa ────────────
-    const openSession = await WorkSession.findOne({ status: 'open' });
+    const openSession = await WorkSession.findOne({ status: 'open' }).populate({
+      path: 'vehicleId',
+      model: 'Vehicle',
+    });
     if (openSession) {
       return NextResponse.json(
         {
@@ -83,6 +92,7 @@ export async function POST(request: NextRequest) {
           error: 'Ya existe una jornada abierta.',
           code: 'SESSION_ALREADY_ACTIVE',
           data: { existingSessionId: openSession._id },
+          existingSession: openSession,
         },
         { status: 409 }
       );
@@ -112,6 +122,7 @@ export async function POST(request: NextRequest) {
       date: parsedDate,
       startTime: parsedStartTime,
       notes: notes?.trim() || undefined,
+      clientRequestId: clientRequestId || undefined,
     });
 
     console.info(`[SESSION_CREATE] New session ${session._id} for vehicle ${vehicleId}`);
@@ -119,11 +130,31 @@ export async function POST(request: NextRequest) {
       { success: true, data: session },
       { status: 201 }
     );
-  } catch (error) {
-    console.error('[SESSION_CREATE] Error:', error);
+} catch (error) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000) {
+      const existing = await WorkSession.findOne({ status: 'open' }).populate({ path: 'vehicleId', model: 'Vehicle' });
+      if (existing) {
+        return NextResponse.json({
+          success: false,
+          error: 'Ya existe una jornada abierta.',
+          code: 'SESSION_ALREADY_ACTIVE',
+          data: { existingSessionId: existing._id },
+          existingSession: existing,
+        }, { status: 409 });
+      }
+    }
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    const isDatabaseError = /Mongo|Mongoose|buffer|connect|timeout/i.test(message);
+    console.error('[SESSION_CREATE] Error:', { message, isDatabaseError });
     return NextResponse.json(
-      { success: false, error: 'Error al crear jornada. Intentá nuevamente.' },
-      { status: 500 }
+      {
+        success: false,
+        error: isDatabaseError
+          ? 'La base de datos no está disponible. La jornada quedará guardada localmente si no hay conexión.'
+          : 'Error al crear jornada. Intentá nuevamente.',
+        code: isDatabaseError ? 'DATABASE_UNAVAILABLE' : 'SESSION_CREATE_FAILED',
+      },
+      { status: isDatabaseError ? 503 : 500 }
     );
   }
 }

@@ -3,6 +3,8 @@ import mongoose, { Schema, Model } from 'mongoose';
 export interface IExpenseCategory {
   name: string;
   active: boolean;
+  clientRequestId?: string;
+  revision: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +19,18 @@ const ExpenseCategorySchema = new Schema<IExpenseCategory>(
     active: {
       type: Boolean,
       default: true,
+    },
+    clientRequestId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    revision: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
     },
   },
   {

@@ -7,6 +7,8 @@ export interface IVehicle {
   year: number;
   plate: string;
   active: boolean;
+  clientRequestId?: string;
+  revision: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +38,18 @@ const VehicleSchema = new Schema<IVehicle>(
     active: {
       type: Boolean,
       default: true,
+    },
+    clientRequestId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    revision: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
     },
   },
   {

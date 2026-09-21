@@ -12,9 +12,10 @@ type Step = 'form' | 'confirm';
 
 interface StartSessionFormProps {
   onSessionStarted: (session: WorkSession) => void;
+  onActiveSessionFound?: (data: { session: WorkSession; transactions: import('@/types').Transaction[]; summary: import('@/types').SessionSummary }) => void;
 }
 
-export default function StartSessionForm({ onSessionStarted }: StartSessionFormProps) {
+export default function StartSessionForm({ onSessionStarted, onActiveSessionFound }: StartSessionFormProps) {
   const [step, setStep] = useState<Step>('form');
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
@@ -75,7 +76,12 @@ export default function StartSessionForm({ onSessionStarted }: StartSessionFormP
       });
       onSessionStarted(session);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo iniciar la jornada. Intentá nuevamente.');
+      const typed = e as Error & { code?: string; activeData?: { session: WorkSession; transactions: import('@/types').Transaction[]; summary: import('@/types').SessionSummary } };
+      if (typed.code === 'SESSION_ALREADY_ACTIVE' && typed.activeData && onActiveSessionFound) {
+        onActiveSessionFound(typed.activeData);
+        return;
+      }
+      setError(typed.message || 'No se pudo iniciar la jornada. Intentá nuevamente.');
       setStep('form');
     } finally {
       setSubmitting(false);

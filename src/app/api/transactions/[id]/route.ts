@@ -39,7 +39,7 @@ export async function PATCH(
     await connectDB();
     const { id } = await params;
     const body = await request.json();
-    const { type, amount, category, platform, paymentMethod, description } = body;
+    const { type, amount, category, platform, paymentMethod, description, expectedRevision } = body;
 
     const transaction = await Transaction.findById(id);
     if (!transaction) {

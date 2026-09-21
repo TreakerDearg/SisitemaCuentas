@@ -50,7 +50,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    loadInitialState();
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      loadInitialState().catch(() => {
+        if (!cancelled) setAppState('error');
+      });
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [loadInitialState]);
 
   /* ── Handlers ── */
@@ -135,7 +144,14 @@ export default function Home() {
         onClose={() => setShowStartForm(false)}
         title="Nueva jornada"
       >
-        <StartSessionForm onSessionStarted={handleSessionStarted} />
+        <StartSessionForm
+          onSessionStarted={handleSessionStarted}
+          onActiveSessionFound={(data) => {
+            setActiveData(data);
+            setShowStartForm(false);
+            setAppState('active');
+          }}
+        />
       </BottomSheet>
     </>
   );

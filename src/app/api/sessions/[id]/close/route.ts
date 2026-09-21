@@ -13,7 +13,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { finalKm, notes } = body;
+    const { finalKm, notes, clientRequestId } = body;
 
     if (finalKm === undefined || finalKm === null) {
       return NextResponse.json(
@@ -26,6 +26,11 @@ export async function PATCH(
         { success: false, error: 'El KM final debe ser un número válido.' },
         { status: 400 }
       );
+    }
+
+    if (clientRequestId) {
+      const alreadyClosed = await WorkSession.findOne({ clientRequestId });
+      if (alreadyClosed) return NextResponse.json({ success: true, data: alreadyClosed }, { status: 200 });
     }
 
     const session = await WorkSession.findById(id);
@@ -59,6 +64,7 @@ export async function PATCH(
     session.status = 'closed';
     session.finalKm = finalKm;
     session.endTime = new Date();
+    if (clientRequestId) session.clientRequestId = clientRequestId;
     if (notes !== undefined) {
       session.notes = notes?.trim() || undefined;
     }

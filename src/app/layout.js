@@ -1,6 +1,11 @@
 import "./globals.css";
 import BottomNav from "@/components/ui/BottomNav";
 import ConnectionBanner from "@/components/ui/ConnectionBanner";
+import { OfflineProvider } from "@/components/offline/OfflineProvider";
+import OfflineStatus from "@/components/offline/OfflineStatus";
+import ServiceWorkerRegister from "@/components/offline/ServiceWorkerRegister";
+import SyncDiagnostics from "@/components/offline/SyncDiagnostics";
+import SyncSelector from "@/components/offline/SyncSelector";
 
 export const metadata = {
   title: "Gestor de Gastos",
@@ -40,9 +45,15 @@ export default function RootLayout({ children }) {
         className="min-h-full flex flex-col font-sans"
         style={{ background: "var(--color-background)", paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}
       >
-        {children}
-        <ConnectionBanner />
-        <BottomNav />
+        <OfflineProvider>
+          <ServiceWorkerRegister />
+          {children}
+          <OfflineStatus />
+          <SyncSelector />
+          <SyncDiagnostics />
+          <ConnectionBanner />
+          <BottomNav />
+        </OfflineProvider>
       </body>
     </html>
   );

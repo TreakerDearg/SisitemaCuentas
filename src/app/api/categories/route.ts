@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { name } = body;
+    const { name, clientRequestId } = body;
 
     // Validaciones
     if (!name) {
@@ -18,7 +18,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const category = await ExpenseCategory.create({ name });
+    if (clientRequestId) {
+      const existing = await ExpenseCategory.findOne({ clientRequestId });
+      if (existing) return NextResponse.json({ success: true, data: existing }, { status: 200 });
+    }
+
+    const category = await ExpenseCategory.create({ name, clientRequestId: clientRequestId || undefined });
 
     return NextResponse.json(
       { success: true, data: category },

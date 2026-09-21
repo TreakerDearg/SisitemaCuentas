@@ -7,6 +7,8 @@ import {
   createVehicle,
   getCategories,
   createCategory,
+  updateVehicle,
+  updateCategory,
 } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -61,18 +63,16 @@ function VehiclesSection({ showToast }: { showToast: (m: string, t?: ToastType) 
 
   const load = useCallback(() => {
     setLoading(true);
-    getVehicles()
-      .then((vs) => {
-        // Cargar también inactivos para mostrarlos en config
-        return fetch('/api/vehicles?includeInactive=true')
-          .then((r) => r.json())
-          .then((j) => { if (j.success) setVehicles(j.data); else setVehicles(vs); });
-      })
+    getVehicles(true)
+      .then((vs) => setVehicles(vs))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function handleCreate() {
     if (!form.name.trim() || !form.brand.trim() || !form.model.trim() || !form.plate.trim()) {
@@ -100,11 +100,8 @@ function VehiclesSection({ showToast }: { showToast: (m: string, t?: ToastType) 
   async function handleToggle(vehicle: Vehicle) {
     setToggling(vehicle._id);
     try {
-      await fetch(`/api/vehicles/${vehicle._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !vehicle.active }),
-      });
+      const updated = await updateVehicle(vehicle._id, { active: !vehicle.active });
+      setVehicles((items) => items.map((item) => item._id === updated._id ? updated : item));
       load();
       showToast(`Vehículo ${vehicle.active ? 'desactivado' : 'activado'}`);
     } catch {
@@ -201,14 +198,16 @@ function CategoriesSection({ showToast }: { showToast: (m: string, t?: ToastType
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch('/api/categories?includeInactive=true')
-      .then((r) => r.json())
-      .then((j) => { if (j.success) setCategories(j.data); })
+    getCategories(true)
+      .then((items) => setCategories(items))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function handleCreate() {
     if (!newName.trim()) { setCreateError('Ingresá un nombre.'); return; }
@@ -229,11 +228,8 @@ function CategoriesSection({ showToast }: { showToast: (m: string, t?: ToastType
   async function handleToggle(cat: ExpenseCategory) {
     setToggling(cat._id);
     try {
-      await fetch(`/api/categories/${cat._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !cat.active }),
-      });
+      const updated = await updateCategory(cat._id, { active: !cat.active });
+      setCategories((items) => items.map((item) => item._id === updated._id ? updated : item));
       load();
       showToast(`Categoría ${cat.active ? 'desactivada' : 'activada'}`);
     } catch {
@@ -454,7 +450,7 @@ function DataSection({ showToast }: { showToast: (m: string, t?: ToastType) => v
                   <span>{importPreview.transactions} movimientos</span>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--color-warning)' }}>
-                  ⚠ "Reemplazar" eliminará todos tus datos actuales antes de importar.
+                  Reemplazar eliminará todos tus datos actuales antes de importar.
                 </p>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" fullWidth onClick={() => { setImportPreview(null); setImportBackup(null); }} disabled={importing}>
