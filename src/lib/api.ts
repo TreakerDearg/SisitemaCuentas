@@ -121,7 +121,10 @@ export async function getActiveSession(): Promise<ActiveSessionData | null> {
     if (!isNetworkError(error) && typed.status !== 503 && typed.status !== 500) throw error;
     const cached = await getOfflineRecord<ActiveSessionData>('sessions', 'active');
     if (cached) return cached;
-    throw new Error('No se pudo consultar la jornada activa y no hay una copia local disponible.');
+    const unavailable = new Error('La base de datos no está disponible. Verificá la conexión o intentá nuevamente.') as Error & { code?: string; status?: number };
+    unavailable.code = 'DATABASE_UNAVAILABLE';
+    unavailable.status = typed.status ?? 503;
+    throw unavailable;
   }
 }
 

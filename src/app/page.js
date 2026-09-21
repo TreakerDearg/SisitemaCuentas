@@ -25,8 +25,10 @@ export default function Home() {
   const [lastSession, setLastSession] = useState(null);
   const [showStartForm, setShowStartForm] = useState(false);
   const [initError, setInitError] = useState('');
+  const [retrying, setRetrying] = useState(false);
 
   const loadInitialState = useCallback(async () => {
+    setRetrying(true);
     setAppState('loading');
     setInitError('');
     try {
@@ -46,6 +48,8 @@ export default function Home() {
       const message = err instanceof Error ? err.message : 'No se pudo conectar al servidor.';
       setInitError(message);
       setAppState('error');
+    } finally {
+      setRetrying(false);
     }
   }, []);
 
@@ -107,7 +111,7 @@ export default function Home() {
   }
 
   if (appState === 'error') {
-    return <ErrorScreen message={initError} onRetry={loadInitialState} />;
+    return <ErrorScreen message={initError} onRetry={loadInitialState} retrying={retrying} />;
   }
 
   // Modal de recuperación: el usuario vuelve con una jornada activa
@@ -350,7 +354,7 @@ function LoadingScreen() {
   );
 }
 
-function ErrorScreen({ message, onRetry }) {
+function ErrorScreen({ message, onRetry, retrying }) {
   return (
     <div
       className="flex items-center justify-center px-6"
@@ -390,10 +394,11 @@ function ErrorScreen({ message, onRetry }) {
         </div>
         <button
           onClick={onRetry}
-          className="w-full py-3 rounded-2xl text-sm font-semibold"
+          disabled={retrying}
+          className="w-full py-3 rounded-2xl text-sm font-semibold disabled:opacity-60"
           style={{ background: 'var(--color-accent)', color: '#fff', minHeight: '48px' }}
         >
-          Reintentar
+          {retrying ? 'Verificando…' : 'Reintentar'}
         </button>
       </div>
     </div>
