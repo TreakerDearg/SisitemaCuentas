@@ -1,9 +1,9 @@
 'use client';
-'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ActiveSessionData, WorkSession } from '@/types';
 import { closeSession } from '@/lib/api';
+import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { formatCurrency, formatKm } from '@/lib/format';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -29,6 +29,23 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
 
   // Prevención de doble cierre en frontend
   const submittingRef = useRef(false);
+
+  useEffect(() => {
+    void getDraft<{ finalKm: string; actualCash: string; notes: string }>(`close-session:${session._id}`).then((draft) => {
+      if (draft) {
+        setFinalKm(draft.finalKm ?? '');
+        setActualCash(draft.actualCash ?? '');
+        setNotes(draft.notes ?? session.notes ?? '');
+      }
+    }).catch(() => undefined);
+  }, [session._id, session.notes]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void saveDraft(`close-session:${session._id}`, { finalKm, actualCash, notes }).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [finalKm, actualCash, notes, session._id]);
 
   function validate() {
     const errs: typeof fieldErrors = {};
@@ -58,6 +75,7 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
         actualCash: cash,
         notes: notes.trim() || undefined,
       });
+      await clearDraft(`close-session:${session._id}`);
       onClosed(closed, cash);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cerrar la jornada. Intentá nuevamente.');

@@ -11,6 +11,7 @@ import {
   getOfflineRecord,
   listOfflineRecords,
   getManualOffline,
+  getMappedId,
 } from '@/lib/offline';
 import { calculateLocalAnalytics } from '@/lib/localAnalytics';
 import { updateActiveSessionSnapshot, removeFromActiveSessionSnapshot } from '@/lib/activeSession';
@@ -216,15 +217,17 @@ export async function closeSession(
 export async function createTransaction(
   payload: CreateTransactionPayload
 ): Promise<Transaction> {
+  const mappedSessionId = await getMappedId(payload.sessionId) ?? payload.sessionId;
   const id = payload.clientRequestId ?? generateRequestId();
   const optimistic = {
     _id: id,
     ...payload,
+    sessionId: mappedSessionId,
     revision: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Transaction;
-  const body = { ...payload, clientRequestId: id };
+  const body = { ...payload, sessionId: mappedSessionId, clientRequestId: id };
   const transaction = await apiFetch<Transaction>('/api/transactions', {
     method: 'POST',
     body: JSON.stringify(body),

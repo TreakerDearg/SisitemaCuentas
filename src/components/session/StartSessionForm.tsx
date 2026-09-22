@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { Vehicle, WorkSession } from '@/types';
 import { getVehicles, createSession } from '@/lib/api';
+import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { todayISO, nowTimeHHMM, formatDate, formatCurrency, formatKm } from '@/lib/format';
 import VehicleSelector from '@/components/vehicle/VehicleSelector';
 import Button from '@/components/ui/Button';
@@ -33,6 +34,9 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
 
   useEffect(() => {
+    void getDraft<typeof form>('start-session').then((draft) => {
+      if (draft) setForm((current) => ({ ...current, ...draft }));
+    }).catch(() => undefined);
     getVehicles()
       .then((vs) => {
         setVehicles(vs);
@@ -40,6 +44,11 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
       })
       .finally(() => setLoadingVehicles(false));
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void saveDraft('start-session', form).catch(() => undefined); }, 300);
+    return () => window.clearTimeout(timer);
+  }, [form]);
 
   function setField(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -74,6 +83,7 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
         initialKm: parseInt(form.initialKm),
         notes: form.notes.trim() || undefined,
       });
+      await clearDraft('start-session');
       onSessionStarted(session);
     } catch (e) {
       const typed = e as Error & { code?: string; activeData?: { session: WorkSession; transactions: import('@/types').Transaction[]; summary: import('@/types').SessionSummary } };

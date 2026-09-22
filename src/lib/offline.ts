@@ -202,6 +202,40 @@ export async function setManualOffline(value: boolean): Promise<void> {
   await transactionComplete(META_STORE, (store) => store.put({ key: 'manualOffline', value }));
 }
 
+/** Guarda datos de formularios incompletos para poder recuperarlos tras recargar. */
+export async function saveDraft<T>(key: string, value: T): Promise<void> {
+  if (!isBrowser()) return;
+  await transactionComplete(META_STORE, (store) =>
+    store.put({ key: `draft:${key}`, value, updatedAt: new Date().toISOString() })
+  );
+}
+
+export async function getDraft<T>(key: string): Promise<T | null> {
+  if (!isBrowser()) return null;
+  const item = await transactionRequest<{ key: string; value: T } | undefined>(META_STORE, 'readonly', (store) =>
+    store.get(`draft:${key}`)
+  );
+  return item?.value ?? null;
+}
+
+export async function clearDraft(key: string): Promise<void> {
+  if (!isBrowser()) return;
+  await transactionComplete(META_STORE, (store) => store.delete(`draft:${key}`));
+}
+
+export async function saveIdMapping(localId: string, serverId: string): Promise<void> {
+  if (!isBrowser()) return;
+  await transactionComplete(META_STORE, (store) => store.put({ key: `id:${localId}`, value: serverId }));
+}
+
+export async function getMappedId(localId: string): Promise<string | null> {
+  if (!isBrowser()) return null;
+  const item = await transactionRequest<{ key: string; value: string } | undefined>(META_STORE, 'readonly', (store) =>
+    store.get(`id:${localId}`)
+  );
+  return item?.value ?? null;
+}
+
 export interface SyncConflict {
   id: string;
   entity: OfflineEntity;

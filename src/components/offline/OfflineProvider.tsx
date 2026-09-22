@@ -35,8 +35,11 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     const next = !manualOffline;
     await setManualOffline(next);
     setManualOfflineState(next);
-    if (!next && navigator.onLine) await syncPendingOperations();
-  }, [manualOffline]);
+    if (!next && typeof navigator !== 'undefined' && navigator.onLine) {
+      await syncPendingOperations();
+      await refreshPending();
+    }
+  }, [manualOffline, refreshPending]);
 
   const syncNow = useCallback(async () => {
     if (manualOffline || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
@@ -60,10 +63,10 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       if (online && !manualOffline) void syncNow();
     };
 
-    Promise.all([countPendingOperations(), getManualOffline()]).then(([count, offline]) => {
+    void Promise.all([countPendingOperations(), getManualOffline()]).then(([count, offline]) => {
       setPendingCount(count);
       setManualOfflineState(offline);
-    });
+    }).catch(() => undefined);
     window.addEventListener('online', updateOnline);
     window.addEventListener('offline', updateOnline);
     const interval = window.setInterval(() => {

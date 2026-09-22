@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ExpenseCategory, Transaction } from '@/types';
 import { createTransaction, getCategories, createCategory, generateRequestId } from '@/lib/api';
+import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { useLastChoice } from '@/hooks/useLastChoice';
 import Button from '@/components/ui/Button';
 import SegmentedControl from '@/components/ui/SegmentedControl';
@@ -39,17 +40,36 @@ export default function ExpenseForm({ sessionId, onSaved, onCancel }: ExpenseFor
   const [newCatError, setNewCatError] = useState('');
 
   useEffect(() => {
+    void getDraft<{ amount: string; categoryId: string; description: string }>(`expense:${sessionId}`).then((draft) => {
+      if (draft) {
+        setAmount(draft.amount ?? '');
+        setCategoryId(draft.categoryId ?? '');
+        setDescription(draft.description ?? '');
+      }
+    }).catch(() => undefined);
+  }, [sessionId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void saveDraft(`expense:${sessionId}`, { amount, categoryId, description }).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [amount, categoryId, description, sessionId]);
+
+  useEffect(() => {
     getCategories()
       .then((cats) => {
         setCategories(cats);
         // Si la última categoría guardada ya no existe, limpiarla
-        if (categoryId && !cats.find((c) => c._id === categoryId)) {
-          setCategoryId('');
-        }
       })
       .finally(() => setLoadingCats(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (categories.length > 0 && categoryId && !categories.some((category) => category._id === categoryId)) {
+      setCategoryId('');
+    }
+  }, [categories, categoryId, setCategoryId]);
 
   // Foco automático en monto
   useEffect(() => {
@@ -108,6 +128,7 @@ export default function ExpenseForm({ sessionId, onSaved, onCancel }: ExpenseFor
         description: description.trim() || undefined,
         clientRequestId,
       });
+      await clearDraft(`expense:${sessionId}`);
       onSaved(tx);
     } catch (e) {
       setErrors({

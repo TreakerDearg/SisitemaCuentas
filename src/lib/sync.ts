@@ -11,7 +11,9 @@ import {
   getSyncCursor,
   setSyncCursor,
   saveSyncConflict,
-  getManualOffline
+  getManualOffline,
+  saveIdMapping,
+  getMappedId
 } from '@/lib/offline';
 
 export interface SyncResult {
@@ -48,10 +50,14 @@ async function syncQueue(): Promise<SyncResult> {
   let failed = 0;
 
   const pending = operations.filter((item) => item.status !== 'failed');
-  if (pending.length > 0) {
+  for (const operation of pending) {
+    await rewriteOperationReferences(operation);
+  }
+  const refreshedPending = (await listPendingOperations()).filter((item) => item.status !== 'failed');
+  if (refreshedPending.length > 0) {
     try {
-      const batch = await sendBatch(pending);
-      for (const operation of pending) {
+      const batch = await sendBatch(refreshedPending);
+      for (const operation of refreshedPending) {
         const result = batch.results.find((item) => item.id === operation.id);
         if (!result) continue;
         if (result.success) {
@@ -77,10 +83,10 @@ async function syncQueue(): Promise<SyncResult> {
       }
     } catch (error) {
       if (!isNetworkError(error)) throw error;
-      for (const operation of pending) {
+      for (const operation of refreshedPending) {
         await updatePendingOperation({ ...operation, attempts: operation.attempts + 1, lastError: error instanceof Error ? error.message : 'Error de red' });
       }
-      return { applied: 0, failed: pending.length, remaining: await countPendingSafe() };
+      return { applied: 0, failed: refreshedPending.length, remaining: await countPendingSafe() };
     }
   }
 
@@ -132,7 +138,25 @@ async function sendOperation(operation: PendingOperation): Promise<unknown> {
   return payload.data;
 }
 
+async function rewriteOperationReferences(operation: PendingOperation): Promise<void> {
+  if (!operation.body || typeof operation.body !== 'object') return;
+  const body = { ...(operation.body as Record<string, unknown>) };
+  let changed = false;
+  if (typeof body.sessionId === 'string') {
+    const mapped = await getMappedId(body.sessionId);
+    if (mapped) {
+      body.sessionId = mapped;
+      changed = true;
+    }
+  }
+  if (changed) await updatePendingOperation({ ...operation, body });
+}
+
 async function applySyncResult(operation: PendingOperation, result: unknown): Promise<void> {
+  if (result && typeof result === 'object' && '_id' in result && typeof (result as { _id?: unknown })._id === 'string' && String((result as { _id: string })._id) !== operation.entityId) {
+    await saveIdMapping(operation.entityId, String((result as { _id: string })._id));
+    await saveOfflineRecord(operation.entity, String((result as { _id: string })._id), result);
+  }
   if (operation.kind === 'delete') {
     await removeOfflineRecord(operation.entity, operation.entityId);
     return;

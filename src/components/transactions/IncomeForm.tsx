@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Transaction } from '@/types';
 import { createTransaction, generateRequestId } from '@/lib/api';
+import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { useLastChoice } from '@/hooks/useLastChoice';
 import Button from '@/components/ui/Button';
 import SegmentedControl from '@/components/ui/SegmentedControl';
@@ -32,6 +33,22 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ amount?: string; general?: string }>({});
+
+  useEffect(() => {
+    void getDraft<{ amount: string; description: string }>(`income:${sessionId}`).then((draft) => {
+      if (draft) {
+        setAmount(draft.amount ?? '');
+        setDescription(draft.description ?? '');
+      }
+    }).catch(() => undefined);
+  }, [sessionId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void saveDraft(`income:${sessionId}`, { amount, description }).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [amount, description, sessionId]);
 
   // Prevención de doble envío con ref (más confiable que state solo)
   const submittingRef = useRef(false);
@@ -74,6 +91,7 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
         description: description.trim() || undefined,
         clientRequestId,
       });
+      await clearDraft(`income:${sessionId}`);
       onSaved(tx);
     } catch (e) {
       setErrors({

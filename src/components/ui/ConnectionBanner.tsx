@@ -1,22 +1,33 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
-/**
- * Banner discreto que aparece solo cuando el usuario está offline.
- * No ocupa espacio cuando está online.
- */
+/** Aviso temporal cuando se pierde la conexión; no permanece fijo en pantalla. */
 export default function ConnectionBanner() {
   const status = useOnlineStatus();
+  const previousStatus = useRef(status);
+  const [visible, setVisible] = useState(false);
 
-  if (status === 'online' || status === 'checking') return null;
+  useEffect(() => {
+    const lostConnection = previousStatus.current === 'online' && status === 'offline';
+    previousStatus.current = status;
+
+    if (!lostConnection) return;
+
+    setVisible(true);
+    const timer = window.setTimeout(() => setVisible(false), 4_000);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
+  if (!visible) return null;
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold"
+      className="fixed left-3 right-3 top-3 z-50 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-semibold shadow-lg"
       style={{
         background: 'var(--color-warning-soft)',
-        borderBottom: '1px solid var(--color-warning-border)',
+        border: '1px solid var(--color-warning-border)',
         color: 'var(--color-warning)',
       }}
       role="status"

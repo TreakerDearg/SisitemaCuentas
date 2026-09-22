@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 interface BottomSheetProps {
   open: boolean;
@@ -11,13 +11,42 @@ interface BottomSheetProps {
 
 export default function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
   useEffect(() => {
+    if (!open) return;
+    previouslyFocused.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) onClose();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !sheetRef.current) return;
+      const focusable = sheetRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    const focusTimer = window.setTimeout(() => {
+      sheetRef.current?.querySelector<HTMLElement>('button, input, textarea, select, [tabindex]:not([tabindex="-1"])')?.focus();
+    }, 0);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKey);
+      previouslyFocused.current?.focus();
+    };
   }, [open, onClose]);
 
   useEffect(() => {
@@ -32,7 +61,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
       className="fixed inset-0 z-50 flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={title}
+      aria-labelledby={title ? titleId : undefined}
     >
       {/* Overlay */}
       <div
@@ -67,7 +96,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
             className="flex items-center justify-between px-5 pt-2 pb-4"
             style={{ borderBottom: '1px solid var(--color-border-subtle)' }}
           >
-            <h2 className="text-sm font-semibold tracking-widest uppercase section-label" style={{ color: 'var(--color-text-secondary)', fontSize: '0.7rem' }}>
+            <h2 id={titleId} className="text-sm font-semibold tracking-widest uppercase section-label" style={{ color: 'var(--color-text-secondary)', fontSize: '0.7rem' }}>
               {title}
             </h2>
             <button
