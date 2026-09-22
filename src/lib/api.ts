@@ -10,6 +10,7 @@ import {
   type OfflineEntity,
   getOfflineRecord,
   listOfflineRecords,
+  getManualOffline,
 } from '@/lib/offline';
 import { calculateLocalAnalytics } from '@/lib/localAnalytics';
 import { updateActiveSessionSnapshot, removeFromActiveSessionSnapshot } from '@/lib/activeSession';
@@ -89,6 +90,9 @@ type OfflineMutation<T> = {
 // ─── Sessions ─────────────────────────────────
 
 export async function getActiveSession(): Promise<ActiveSessionData | null> {
+  if (await getManualOffline()) {
+    return getOfflineRecord<ActiveSessionData>('sessions', 'active');
+  }
   try {
     const res = await fetchWithTimeout('/api/sessions/active', {
       headers: { 'Content-Type': 'application/json' },

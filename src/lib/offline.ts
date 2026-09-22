@@ -191,6 +191,17 @@ export async function getSyncCursor(): Promise<string | null> {
   return item?.value ?? null;
 }
 
+export async function getManualOffline(): Promise<boolean> {
+  if (!isBrowser()) return false;
+  const item = await transactionRequest<{ key: string; value: boolean } | undefined>(META_STORE, 'readonly', (store) => store.get('manualOffline'));
+  return item?.value === true;
+}
+
+export async function setManualOffline(value: boolean): Promise<void> {
+  if (!isBrowser()) return;
+  await transactionComplete(META_STORE, (store) => store.put({ key: 'manualOffline', value }));
+}
+
 export interface SyncConflict {
   id: string;
   entity: OfflineEntity;

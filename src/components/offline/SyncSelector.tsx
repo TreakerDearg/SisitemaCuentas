@@ -5,10 +5,10 @@ import { useOffline } from '@/components/offline/OfflineProvider';
 import { listSyncConflicts, type SyncConflict } from '@/lib/offline';
 
 export default function SyncSelector() {
-  const { isOnline, pendingCount, syncState, syncError, syncNow } = useOffline();
+  const { isOnline, pendingCount, syncState, syncError, syncNow, manualOffline, toggleManualOffline } = useOffline();
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [showConflicts, setShowConflicts] = useState(false);
-  const disabled = !isOnline || syncState === 'syncing';
+  const disabled = !isOnline || manualOffline || syncState === 'syncing';
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -19,6 +19,18 @@ export default function SyncSelector() {
 
   return (
     <section className="mx-auto w-full max-w-lg px-4 py-3">
+      <button
+        type="button"
+        onClick={() => void toggleManualOffline()}
+        className="mb-2 w-full rounded-2xl px-4 py-3 text-sm font-semibold"
+        style={{
+          background: manualOffline ? 'var(--color-warning-soft)' : 'var(--color-surface-elevated)',
+          color: manualOffline ? 'var(--color-warning)' : 'var(--color-text-secondary)',
+          border: '1px solid var(--color-border-subtle)',
+        }}
+      >
+        Modo offline {manualOffline ? 'ON' : 'OFF'}
+      </button>
       <button
         type="button"
         onClick={() => void syncNow()}
@@ -33,8 +45,10 @@ export default function SyncSelector() {
       >
         {syncState === 'syncing'
           ? 'Sincronizando…'
-          : !isOnline
-            ? 'Sin conexión: sincronización no disponible'
+          : manualOffline
+            ? 'Modo offline activo'
+            : !isOnline
+              ? 'Sin conexión: sincronización no disponible'
             : pendingCount > 0
               ? `Toque para iniciar la sincronizacion (${pendingCount} pendiente${pendingCount === 1 ? '' : 's'})`
               : 'Toque para iniciar la sincronizacion'}

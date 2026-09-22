@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { countPendingOperations } from '@/lib/offline';
+import { countPendingOperations, getManualOffline, setManualOffline } from '@/lib/offline';
 import { syncPendingOperations } from '@/lib/sync';
 
 type SyncState = 'idle' | 'syncing' | 'error';
@@ -12,6 +12,8 @@ interface OfflineContextValue {
   syncState: SyncState;
   syncError: string | null;
   syncNow: () => Promise<void>;
+  manualOffline: boolean;
+  toggleManualOffline: () => Promise<void>;
 }
 
 const OfflineContext = createContext<OfflineContextValue | null>(null);
@@ -23,13 +25,21 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [syncState, setSyncState] = useState<SyncState>('idle');
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [manualOffline, setManualOfflineState] = useState(false);
 
   const refreshPending = useCallback(async () => {
     setPendingCount(await countPendingOperations());
   }, []);
 
+  const toggleManualOffline = useCallback(async () => {
+    const next = !manualOffline;
+    await setManualOffline(next);
+    setManualOfflineState(next);
+    if (!next && navigator.onLine) await syncPendingOperations();
+  }, [manualOffline]);
+
   const syncNow = useCallback(async () => {
-    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    if (manualOffline || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
     setSyncState('syncing');
     setSyncError(null);
     try {
@@ -41,21 +51,24 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       setSyncError(error instanceof Error ? error.message : 'No se pudo sincronizar');
       await refreshPending();
     }
-  }, [refreshPending]);
+  }, [manualOffline, refreshPending]);
 
   useEffect(() => {
     const updateOnline = () => {
       const online = navigator.onLine;
       setIsOnline(online);
-      if (online) void syncNow();
+      if (online && !manualOffline) void syncNow();
     };
 
-    countPendingOperations().then((count) => setPendingCount(count));
+    Promise.all([countPendingOperations(), getManualOffline()]).then(([count, offline]) => {
+      setPendingCount(count);
+      setManualOfflineState(offline);
+    });
     window.addEventListener('online', updateOnline);
     window.addEventListener('offline', updateOnline);
     const interval = window.setInterval(() => {
       void refreshPending();
-      if (navigator.onLine) void syncNow();
+      if (navigator.onLine && !manualOffline) void syncNow();
     }, 30_000);
 
     return () => {
@@ -63,11 +76,11 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('offline', updateOnline);
       window.clearInterval(interval);
     };
-  }, [refreshPending, syncNow]);
+  }, [manualOffline, refreshPending, syncNow]);
 
   const value = useMemo(
-    () => ({ isOnline, pendingCount, syncState, syncError, syncNow }),
-    [isOnline, pendingCount, syncState, syncError, syncNow]
+    () => ({ isOnline, pendingCount, syncState, syncError, syncNow, manualOffline, toggleManualOffline }),
+    [isOnline, pendingCount, syncState, syncError, syncNow, manualOffline, toggleManualOffline]
   );
 
   return <OfflineContext.Provider value={value}>{children}</OfflineContext.Provider>;

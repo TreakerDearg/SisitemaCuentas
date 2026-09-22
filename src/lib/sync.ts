@@ -10,7 +10,8 @@ import {
   type PendingOperation,
   getSyncCursor,
   setSyncCursor,
-  saveSyncConflict
+  saveSyncConflict,
+  getManualOffline
 } from '@/lib/offline';
 
 export interface SyncResult {
@@ -35,6 +36,9 @@ export function syncPendingOperations(): Promise<SyncResult> {
 }
 
 async function syncQueue(): Promise<SyncResult> {
+  if (await getManualOffline()) {
+    return { applied: 0, failed: 0, remaining: await countPendingSafe() };
+  }
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     return { applied: 0, failed: 0, remaining: await countPendingSafe() };
   }
