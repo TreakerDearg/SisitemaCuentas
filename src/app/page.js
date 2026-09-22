@@ -47,7 +47,9 @@ export default function Home() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo conectar al servidor.';
       setInitError(message);
-      setAppState('error');
+      // El servidor puede estar caído: continuar con la interfaz offline.
+      // La jornada activa ya se intentó recuperar desde IndexedDB en getActiveSession().
+      setAppState('no-session');
     } finally {
       setRetrying(false);
     }
@@ -57,7 +59,7 @@ export default function Home() {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       loadInitialState().catch(() => {
-        if (!cancelled) setAppState('error');
+        if (!cancelled) setAppState('no-session');
       });
     }, 0);
     return () => {

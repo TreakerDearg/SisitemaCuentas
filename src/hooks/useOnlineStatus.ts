@@ -13,12 +13,11 @@ export type OnlineStatus = 'online' | 'offline' | 'checking';
  * para detectar si el backend responde (no solo si hay red local).
  */
 export function useOnlineStatus(): OnlineStatus {
-  const [status, setStatus] = useState<OnlineStatus>('checking');
+  const [status, setStatus] = useState<OnlineStatus>(() =>
+    typeof navigator === 'undefined' ? 'checking' : navigator.onLine ? 'online' : 'offline'
+  );
 
   useEffect(() => {
-    // Estado inicial
-    setStatus(navigator.onLine ? 'online' : 'offline');
-
     function handleOnline() {
       setStatus('online');
     }
