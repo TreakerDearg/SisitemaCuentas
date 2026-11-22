@@ -39,7 +39,7 @@ export async function PATCH(
     await connectDB();
     const { id } = await params;
     const body = await request.json();
-    const { type, amount, category, platform, paymentMethod, description, expectedRevision } = body;
+    const { type, amount, category, platform, paymentMethod, description, km, liters, expectedRevision } = body;
 
     const transaction = await Transaction.findById(id);
     if (!transaction) {
@@ -90,6 +90,8 @@ export async function PATCH(
     if (platform !== undefined) transaction.platform = platform;
     if (paymentMethod !== undefined) transaction.paymentMethod = paymentMethod;
     if (description !== undefined) transaction.description = description?.trim() || undefined;
+    if (km !== undefined) transaction.km = typeof km === 'number' && km >= 0 ? km : undefined;
+    if (liters !== undefined) transaction.liters = typeof liters === 'number' && liters >= 0 ? liters : undefined;
 
     await transaction.save();
     return NextResponse.json({ success: true, data: transaction });

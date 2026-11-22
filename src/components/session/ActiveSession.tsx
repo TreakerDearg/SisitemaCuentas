@@ -10,8 +10,10 @@ import ExpenseForm from '@/components/transactions/ExpenseForm';
 import TransactionList from '@/components/transactions/TransactionList';
 import TransactionDetail from '@/components/transactions/TransactionDetail';
 import CloseSessionForm from './CloseSessionForm';
+import FuelKmModal from '@/components/fuel/FuelKmModal';
 import Toast, { ToastType } from '@/components/ui/Toast';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import Link from 'next/link';
 
 interface ActiveSessionProps {
   data: ActiveSessionData;
@@ -19,19 +21,28 @@ interface ActiveSessionProps {
   onSessionClosed: (session: WorkSession, actualCash: number) => void;
 }
 
-type Sheet = 'income' | 'expense' | 'close' | 'detail' | null;
+type Sheet = 'income' | 'expense' | 'fuel' | 'close' | 'detail' | null;
 interface ToastState { message: string; type: ToastType; }
 
 export default function ActiveSession({ data, onDataChange, onSessionClosed }: ActiveSessionProps) {
   const { session, transactions, summary } = data;
   const [activeSheet, setActiveSheet] = useState<Sheet>(null);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [txFilter, setTxFilter] = useState<'all' | 'fuel'>('all');
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const vehicleName =
     typeof session.vehicleId === 'object' && session.vehicleId !== null
       ? (session.vehicleId as { name?: string }).name ?? ''
       : '';
+
+  // Odómetro más reciente: última transacción con KM o KM inicial
+  const latestKm =
+    transactions.find((t) => t.km && t.km > 0)?.km ??
+    session.finalKm ??
+    session.initialKm;
+
+  const currentDistance = latestKm > session.initialKm ? latestKm - session.initialKm : 0;
 
   function showToast(message: string, type: ToastType = 'success') {
     setToast({ message, type });
@@ -48,6 +59,15 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
     closeAllSheets();
     showToast(tx.type === 'income' ? 'Ingreso registrado' : 'Gasto registrado',
       tx.type === 'income' ? 'success' : 'info');
+  }
+
+  function handleFuelSaved(tx: Transaction, newKm: number) {
+    const next = [tx, ...transactions];
+    const updated = recalculate(data, next);
+    updated.session.finalKm = newKm;
+    onDataChange(updated);
+    closeAllSheets();
+    showToast(`Carga registrada · Odómetro: ${formatKm(newKm)} km`, 'success');
   }
 
   function handleTransactionUpdated(updated: Transaction) {
@@ -68,37 +88,58 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
     summary.netResult > 0
       ? 'var(--color-income)'
       : summary.netResult < 0
-      ? 'var(--color-expense)'
-      : 'var(--color-text-primary)';
+        ? 'var(--color-expense)'
+        : 'var(--color-text-primary)';
+
+  // Filtrado de movimientos
+  const fuelTransactions = transactions.filter((t) => {
+    const catName = t.category?.name ?? '';
+    return /combustible|nafta|gnc|gas/i.test(catName) || /combustible/i.test(t.description ?? '');
+  });
+
+  const displayedTransactions = txFilter === 'fuel' ? fuelTransactions : transactions;
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--color-background)' }}>
+    <div className="min-h-screen pb-20" style={{ background: 'var(--color-background)' }}>
 
-      {/* ── HEADER CON SELECTOR DE TEMA ── */}
+      {/* ── HEADER SUPERIOR COMPACTO ── */}
       <header
-        className="sticky top-0 z-20 px-4"
+        className="sticky top-0 z-20 px-4 backdrop-blur-md"
         style={{
           background: 'var(--color-surface)',
           borderBottom: '1px solid var(--color-border)',
           boxShadow: 'var(--shadow-sm)',
         }}
       >
-        <div className="max-w-md mx-auto flex items-center justify-between py-3">
-          <div className="flex flex-col gap-1">
+        <div className="max-w-md mx-auto flex items-center justify-between py-2.5">
+          <div className="flex items-center gap-2">
             <span className="badge-active">
               <span
                 className="w-2 h-2 rounded-full animate-pulse-soft"
                 style={{ background: 'var(--color-income)' }}
                 aria-hidden="true"
               />
-              Jornada activa
+              En jornada
             </span>
-            <p className="text-xs font-semibold pl-1" style={{ color: 'var(--color-text-muted)' }}>
-              Inicio: {formatTime(session.startTime)} · {formatDateShort(session.date)}
-            </p>
+            <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+              {formatTime(session.startTime)}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
+            {vehicleName && (
+              <span
+                className="text-xs font-bold px-2 py-1 rounded-xl max-w-[90px] truncate"
+                style={{
+                  background: 'var(--color-surface-elevated)',
+                  color: 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                🚗 {vehicleName}
+              </span>
+            )}
+
             <button
               type="button"
               onClick={() => setActiveSheet('close')}
@@ -106,298 +147,257 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
               style={{
                 background: 'var(--color-surface-elevated)',
                 border: '1px solid var(--color-border)',
-                color: 'var(--color-text-secondary)',
+                color: 'var(--color-text-primary)',
               }}
               title="Cerrar jornada"
             >
               <span>🔒</span>
               <span>Cerrar</span>
             </button>
-            {vehicleName && (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-xl max-w-[90px] truncate" style={{ background: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
-                🚗 {vehicleName}
-              </span>
-            )}
+
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* ── CUERPO PRINCIPAL ── */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-4 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' }}>
+      {/* ── CUERPO PRINCIPAL DEL COCKPIT ── */}
+      <main className="max-w-md mx-auto px-4 py-4 flex flex-col gap-4">
 
-          {/* ── 1. CAJA ESPERADA (Tarjeta Hero de alto contraste) ── */}
-          <section
-            className="rounded-3xl px-6 pt-6 pb-6 text-center"
+        {/* ── 1. COCKPIT UNIFICADO DE CAJA & RESULTADO (Todo visible en 1 vistazo) ── */}
+        <section
+          className="rounded-3xl p-5 flex flex-col gap-3.5 shadow-md"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1.5px solid var(--color-border)',
+          }}
+          aria-label="Panel de Control de Caja"
+        >
+          {/* Fila Principal: Efectivo en Mano */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="section-label">Efectivo en caja</p>
+              <p className="text-3xl font-extrabold tabular tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+                {formatCurrency(summary.expectedCash)}
+              </p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                Caja inicial: {formatCurrency(session.initialCash)}
+              </p>
+            </div>
+
+            {/* Ganancia Neta Destacada */}
+            <div className="text-right">
+              <p className="section-label">Ganancia neta</p>
+              <p className="text-2xl font-extrabold tabular" style={{ color: netColor }}>
+                {summary.netResult >= 0 ? '+' : '−'}{formatCurrency(Math.abs(summary.netResult))}
+              </p>
+              <p className="text-xs font-medium mt-0.5 tabular" style={{ color: 'var(--color-transfer)' }}>
+                {formatCurrency(summary.transferIncome - summary.transferExpense)} transf.
+              </p>
+            </div>
+          </div>
+
+          {/* Sub-barra de Resumen Rápido */}
+          <div
+            className="flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-bold border-t"
             style={{
-              background: 'var(--color-surface)',
-              border: '1.5px solid var(--color-border)',
-              boxShadow: 'var(--shadow-md)',
+              background: 'var(--color-surface-elevated)',
+              borderColor: 'var(--color-border-subtle)',
             }}
-            aria-label="Caja esperada"
           >
-            <p className="section-label mb-1">Caja esperada</p>
-            <p
-              className="money-xl tabular"
-              style={{ color: 'var(--color-text-primary)' }}
-              aria-label={`Caja esperada: ${formatCurrency(summary.expectedCash)}`}
-            >
-              {formatCurrency(summary.expectedCash)}
-            </p>
-            <p className="text-xs font-semibold mt-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Caja inicial en mano: {formatCurrency(session.initialCash)}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <span style={{ color: 'var(--color-income)' }}>▲</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Ingresos:</span>
+              <span className="tabular font-extrabold" style={{ color: 'var(--color-income)' }}>
+                +{formatCurrency(summary.totalIncome)}
+              </span>
+            </div>
 
-            {/* Transferencias bajo la caja */}
-            {summary.transferIncome - summary.transferExpense !== 0 && (
-              <div
-                className="mt-3.5 flex items-center justify-center gap-2 px-4 py-2 rounded-2xl mx-auto"
+            <div className="flex items-center gap-1.5">
+              <span style={{ color: 'var(--color-expense)' }}>▼</span>
+              <span style={{ color: 'var(--color-text-secondary)' }}>Gastos:</span>
+              <span className="tabular font-extrabold" style={{ color: 'var(--color-expense)' }}>
+                −{formatCurrency(summary.totalExpense)}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 2. BOTONERA DE ACCIÓN ERGONÓMICA (3 Botones principales) ── */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {/* Ingreso */}
+          <button
+            type="button"
+            onClick={() => setActiveSheet('income')}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3.5 px-2 cursor-pointer active:scale-95 transition-all text-white font-extrabold shadow-sm"
+            style={{
+              background: 'var(--color-income-solid)',
+              boxShadow: 'var(--shadow-income)',
+            }}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20">
+              <ArrowUpIcon color="#FFFFFF" size={18} />
+            </div>
+            <span className="text-sm">+ Ingreso</span>
+          </button>
+
+          {/* Gasto */}
+          <button
+            type="button"
+            onClick={() => setActiveSheet('expense')}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3.5 px-2 cursor-pointer active:scale-95 transition-all text-white font-extrabold shadow-sm"
+            style={{
+              background: 'var(--color-expense-solid)',
+              boxShadow: 'var(--shadow-expense)',
+            }}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20">
+              <ArrowDownIcon color="#FFFFFF" size={18} />
+            </div>
+            <span className="text-sm">− Gasto</span>
+          </button>
+
+          {/* Cargar Combustible & KM */}
+          <button
+            type="button"
+            onClick={() => setActiveSheet('fuel')}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3.5 px-2 cursor-pointer active:scale-95 transition-all text-white font-extrabold shadow-sm"
+            style={{
+              background: '#D97706', // Ámbar combustible
+              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.35)',
+            }}
+          >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 text-base">
+              ⛽
+            </div>
+            <span className="text-sm">Cargar KM</span>
+          </button>
+        </div>
+
+        {/* ── 3. TIRA DE ODÓMETRO & AVANCE DEL TURNO ── */}
+        <div
+          className="rounded-2xl px-4 py-3 flex items-center justify-between"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-lg">🚗</span>
+            <div>
+              <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                Odómetro del vehículo
+              </p>
+              <p className="text-base font-extrabold tabular" style={{ color: 'var(--color-text-primary)' }}>
+                {formatKm(latestKm)} km
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {currentDistance > 0 ? (
+              <span
+                className="text-xs font-extrabold px-2.5 py-1 rounded-xl tabular"
                 style={{
-                  background: 'var(--color-transfer-soft)',
-                  border: '1px solid var(--color-transfer-border)',
-                  width: 'fit-content',
+                  background: 'var(--color-income-soft)',
+                  color: 'var(--color-income)',
                 }}
               >
-                <TransferIcon color="var(--color-transfer)" size={16} />
-                <span className="text-xs font-bold" style={{ color: 'var(--color-transfer)' }}>
-                  {formatCurrency(summary.transferIncome - summary.transferExpense)} en transferencias
-                </span>
-              </div>
+                +{formatKm(currentDistance)} km hoy
+              </span>
+            ) : (
+              <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                Inicio: {formatKm(session.initialKm)} km
+              </span>
             )}
-          </section>
-
-          {/* ── 2. BOTONES SÓLIDOS DE ACCIÓN RÁPIDA (Grandes, táctiles) ── */}
-          <div className="grid grid-cols-2 gap-3.5">
-            <button
-              type="button"
-              onClick={() => setActiveSheet('income')}
-              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 cursor-pointer active:scale-95 transition-all"
-              style={{
-                background: 'var(--color-income-solid)',
-                color: '#FFFFFF',
-                minHeight: '84px',
-                boxShadow: 'var(--shadow-income)',
-                border: 'none',
-              }}
-              aria-label="Registrar ingreso"
-            >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.22)' }}>
-                <ArrowUpIcon color="#FFFFFF" size={22} />
-              </div>
-              <span className="text-lg font-extrabold tracking-wide">
-                + Ingreso
-              </span>
-            </button>
 
             <button
               type="button"
-              onClick={() => setActiveSheet('expense')}
-              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 cursor-pointer active:scale-95 transition-all"
-              style={{
-                background: 'var(--color-expense-solid)',
-                color: '#FFFFFF',
-                minHeight: '84px',
-                boxShadow: 'var(--shadow-expense)',
-                border: 'none',
-              }}
-              aria-label="Registrar gasto"
-            >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.22)' }}>
-                <ArrowDownIcon color="#FFFFFF" size={22} />
-              </div>
-              <span className="text-lg font-extrabold tracking-wide">
-                − Gasto
-              </span>
-            </button>
-          </div>
-
-          {/* ── 3. RESUMEN FINANCIERO ── */}
-          <section
-            className="rounded-3xl overflow-hidden"
-            style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-            aria-label="Resumen financiero"
-          >
-            <div
-              className="px-5 py-3"
+              onClick={() => setActiveSheet('fuel')}
+              className="text-xs font-bold px-2 py-1 rounded-xl transition-all"
               style={{
                 background: 'var(--color-surface-elevated)',
-                borderBottom: '1px solid var(--color-border)',
-              }}
-            >
-              <span className="section-label">Resumen de la jornada</span>
-            </div>
-
-            <div>
-              {/* Ingresos */}
-              <div
-                className="flex items-center justify-between px-5 py-3.5"
-                style={{ borderBottom: '1px solid var(--color-border-subtle)' }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center font-bold"
-                    style={{ background: 'var(--color-income-soft)', color: 'var(--color-income)' }}
-                    aria-hidden="true"
-                  >
-                    +
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--color-text-secondary)' }}>
-                    Ingresos
-                  </span>
-                </div>
-                <span className="money-md" style={{ color: 'var(--color-income)' }}>
-                  +{formatCurrency(summary.totalIncome)}
-                </span>
-              </div>
-
-              {/* Gastos */}
-              <div
-                className="flex items-center justify-between px-5 py-3.5"
-                style={{ borderBottom: '1px solid var(--color-border-subtle)' }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center font-bold"
-                    style={{ background: 'var(--color-expense-soft)', color: 'var(--color-expense)' }}
-                    aria-hidden="true"
-                  >
-                    −
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: 'var(--color-text-secondary)' }}>
-                    Gastos
-                  </span>
-                </div>
-                <span className="money-md" style={{ color: 'var(--color-expense)' }}>
-                  −{formatCurrency(summary.totalExpense)}
-                </span>
-              </div>
-
-              {/* Resultado neto */}
-              <div className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-sm font-extrabold" style={{ color: 'var(--color-text-primary)' }}>
-                  Ganancia neta
-                </span>
-                <span
-                  className="money-md font-extrabold"
-                  style={{ color: netColor }}
-                >
-                  {summary.netResult >= 0 ? '+' : '−'}{formatCurrency(Math.abs(summary.netResult))}
-                </span>
-              </div>
-            </div>
-          </section>
-
-          {/* ── 4. EFECTIVO / TRANSFERENCIAS (Desglose nítido) ── */}
-          <div className="grid grid-cols-2 gap-3">
-            <div
-              className="rounded-3xl p-4 flex flex-col gap-1"
-              style={{
-                background: 'var(--color-surface)',
+                color: 'var(--color-accent)',
                 border: '1px solid var(--color-border)',
-                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-base">💵</span>
-                <span className="section-label">Efectivo</span>
-              </div>
-              <p className="text-2xl font-extrabold tabular" style={{ color: 'var(--color-text-primary)' }}>
-                {formatCurrency(summary.cashIncome - summary.cashExpense)}
-              </p>
+              Actualizar
+            </button>
+          </div>
+        </div>
+
+        {/* ── 4. MOVIMIENTOS Y CARGAS DE LA JORNADA ── */}
+        <section className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setTxFilter('all')}
+                className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                style={{
+                  background: txFilter === 'all' ? 'var(--color-accent)' : 'var(--color-surface)',
+                  color: txFilter === 'all' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                Todos ({transactions.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTxFilter('fuel')}
+                className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                style={{
+                  background: txFilter === 'fuel' ? 'var(--color-accent)' : 'var(--color-surface)',
+                  color: txFilter === 'fuel' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                <span>⛽ Combustible</span>
+                <span>({fuelTransactions.length})</span>
+              </button>
             </div>
 
-            <div
-              className="rounded-3xl p-4 flex flex-col gap-1"
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                boxShadow: 'var(--shadow-sm)',
-              }}
+            <Link
+              href="/combustible"
+              className="text-xs font-semibold hover:underline"
+              style={{ color: 'var(--color-accent)' }}
             >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-base">📱</span>
-                <span className="section-label" style={{ color: 'var(--color-transfer)' }}>
-                  Transfer.
-                </span>
-              </div>
-              <p className="text-2xl font-extrabold tabular" style={{ color: 'var(--color-transfer)' }}>
-                {formatCurrency(summary.transferIncome - summary.transferExpense)}
-              </p>
-            </div>
+              Ver rendimiento →
+            </Link>
           </div>
 
-          {/* ── 5. ODÓMETRO (KM) ── */}
-          <div
-            className="rounded-3xl px-5 py-4 flex items-center gap-3"
+          <TransactionList
+            transactions={displayedTransactions}
+            sessionOpen
+            onSelect={(tx) => {
+              setSelectedTx(tx);
+              setActiveSheet('detail');
+            }}
+          />
+        </section>
+
+        {/* ── 5. CIERRE DE JORNADA AL FINAL NATURAL DEL CONTENIDO ── */}
+        <section className="pt-2 pb-6">
+          <Button
+            variant="outline"
+            size="xl"
+            fullWidth
+            onClick={() => setActiveSheet('close')}
+            className="font-bold py-4 text-base shadow-sm"
             style={{
+              borderColor: 'var(--color-border)',
               background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              boxShadow: 'var(--shadow-sm)',
+              color: 'var(--color-text-primary)',
             }}
           >
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0"
-              style={{ background: 'var(--color-info-soft)', color: 'var(--color-info)' }}
-              aria-hidden="true"
-            >
-              🚗
-            </div>
-            <div className="flex-1">
-              <p className="section-label">KM al iniciar</p>
-              <p className="text-xl font-extrabold tabular" style={{ color: 'var(--color-text-primary)' }}>
-                {formatKm(session.initialKm)} km
-              </p>
-            </div>
-          </div>
+            🔒 Finalizar jornada de trabajo
+          </Button>
+          <p className="text-xs text-center mt-2 font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            Completá el odómetro final y efectivo real para ver tu balance
+          </p>
+        </section>
 
-          {/* ── 6. MOVIMIENTOS ── */}
-          <section>
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="section-label">Movimientos</span>
-              {transactions.length > 0 && (
-                <span
-                  className="text-xs px-2.5 py-0.5 rounded-full font-bold tabular"
-                  style={{
-                    background: 'var(--color-surface-elevated)',
-                    color: 'var(--color-text-secondary)',
-                    border: '1px solid var(--color-border)',
-                  }}
-                >
-                  {transactions.length}
-                </span>
-              )}
-            </div>
-            <TransactionList
-              transactions={transactions}
-              sessionOpen
-              onSelect={(tx) => {
-                setSelectedTx(tx);
-                setActiveSheet('detail');
-              }}
-            />
-          </section>
-
-          {/* ── CIERRE DE JORNADA AL FINAL DEL CONTENIDO (Sin tapar tarjetas) ── */}
-          <section className="pt-2 pb-4">
-            <Button
-              variant="outline"
-              size="xl"
-              fullWidth
-              onClick={() => setActiveSheet('close')}
-              className="font-bold py-4 text-base"
-            >
-              🔒 Cerrar jornada
-            </Button>
-            <p className="text-xs text-center mt-2 font-medium" style={{ color: 'var(--color-text-muted)' }}>
-              Cerrá la jornada cuando termines tu turno de trabajo
-            </p>
-          </section>
-        </div>
       </main>
 
       {/* ── BOTTOM SHEETS ── */}
@@ -407,6 +407,15 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
 
       <BottomSheet open={activeSheet === 'expense'} onClose={closeAllSheets} title="Nuevo gasto">
         <ExpenseForm sessionId={session._id} onSaved={handleTransactionSaved} onCancel={closeAllSheets} />
+      </BottomSheet>
+
+      <BottomSheet open={activeSheet === 'fuel'} onClose={closeAllSheets} title="Cargar combustible & KM">
+        <FuelKmModal
+          session={session}
+          lastKm={latestKm}
+          onSaved={handleFuelSaved}
+          onCancel={closeAllSheets}
+        />
       </BottomSheet>
 
       <BottomSheet
@@ -479,14 +488,6 @@ function ArrowDownIcon({ color = 'currentColor', size = 18 }: { color?: string; 
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 5v14M19 12l-7 7-7-7" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function TransferIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4m4-4H3" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

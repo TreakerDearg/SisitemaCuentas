@@ -1,7 +1,5 @@
 import "./globals.css";
 import BottomNav from "@/components/ui/BottomNav";
-import ConnectionBanner from "@/components/ui/ConnectionBanner";
-import ClientOfflineShell from "@/components/offline/ClientOfflineShell";
 
 export const metadata = {
   title: "Gestor de Gastos",
@@ -55,11 +53,8 @@ export default function RootLayout({ children }) {
         className="min-h-full flex flex-col font-sans"
         style={{ background: "var(--color-background)", paddingBottom: "calc(64px + env(safe-area-inset-bottom))" }}
       >
-        <ClientOfflineShell>
-          {children}
-          <ConnectionBanner />
-          <BottomNav />
-        </ClientOfflineShell>
+        {children}
+        <BottomNav />
       </body>
     </html>
   );

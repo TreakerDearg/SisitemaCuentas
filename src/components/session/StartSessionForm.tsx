@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { Vehicle, WorkSession } from '@/types';
 import { getVehicles, createSession, createTransaction, getCategories, createCategory, generateRequestId, getActiveSession } from '@/lib/api';
 import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
-import { todayISO, nowTimeHHMM } from '@/lib/format';
+import { todayISO, nowTimeHHMM, parseKm, parseMoney } from '@/lib/format';
 import Button from '@/components/ui/Button';
 
 interface StartSessionFormProps {
@@ -71,7 +71,7 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    const km = parseInt(initialKm);
+    const km = parseKm(initialKm);
     if (!initialKm || isNaN(km) || km < 0) {
       errs.initialKm = 'Ingresá el kilometraje actual del auto.';
     }
@@ -80,7 +80,7 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
       errs.vehicle = 'Seleccioná un vehículo.';
     }
 
-    const cash = initialCash === '' ? 0 : parseFloat(initialCash);
+    const cash = initialCash === '' ? 0 : parseMoney(initialCash);
     if (isNaN(cash) || cash < 0) {
       errs.initialCash = 'El efectivo debe ser 0 o un monto positivo.';
     }
@@ -104,14 +104,14 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
         vehicleId: selectedVehicleId || vehicles[0]?._id,
         date: todayISO(),
         startTime: now.toISOString(),
-        initialCash: initialCash === '' ? 0 : parseFloat(initialCash),
-        initialKm: parseInt(initialKm),
+        initialCash: initialCash === '' ? 0 : parseMoney(initialCash),
+        initialKm: parseKm(initialKm),
         notes: notes.trim() || undefined,
       });
 
       // 2. Si cargó combustible al inicio, registrar el gasto automáticamente
-      const fuelNum = parseFloat(fuelAmount);
-      if (!isNaN(fuelNum) && fuelNum > 0) {
+      const fuelNum = parseMoney(fuelAmount);
+      if (fuelNum > 0) {
         try {
           const cats = await getCategories();
           let fuelCategory = cats.find((c) => /combustible|nafta|gnc|gas/i.test(c.name));
@@ -181,7 +181,7 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
 
   return (
     <div className="flex flex-col gap-5 px-5 py-5 animate-fade-in">
-      
+
       {/* ── Encabezado ágil ── */}
       <div>
         <h2 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
@@ -209,7 +209,7 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
         >
           <input
             id="initialKm"
-            type="number"
+            type="text"
             inputMode="numeric"
             placeholder="Ej: 235000"
             value={initialKm}

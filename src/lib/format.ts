@@ -189,3 +189,38 @@ export function getPeriodRange(preset: string): { from: string; to: string } {
   from30.setDate(now.getDate() - 29);
   return { from: fmt(from30), to: today };
 }
+
+/**
+ * Parsea un input de kilometraje ingresado por el usuario.
+ * Tolera puntos o comas de miles (ej: "235.000", "90.000", "90000").
+ */
+export function parseKm(val: string | number | null | undefined): number {
+  if (val === null || val === undefined) return NaN;
+  if (typeof val === 'number') return Math.round(val);
+  const str = String(val).trim();
+  if (!str) return NaN;
+  // Quitar puntos, comas y espacios de miles
+  const cleaned = str.replace(/[.,\s]/g, '');
+  const num = parseInt(cleaned, 10);
+  return isNaN(num) ? NaN : num;
+}
+
+/**
+ * Parsea un input monetario ingresado por el usuario.
+ * Tolera signos de pesos, puntos de miles y comas decimales.
+ */
+export function parseMoney(val: string | number | null | undefined): number {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === 'number') return val;
+  const str = String(val).replace(/[$ \s]/g, '').trim();
+  if (!str) return 0;
+  let clean = str;
+  if (clean.includes('.') && clean.includes(',')) {
+    clean = clean.replace(/\./g, '').replace(',', '.');
+  } else if (clean.includes(',')) {
+    clean = clean.replace(',', '.');
+  }
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : num;
+}
+

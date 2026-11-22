@@ -10,7 +10,7 @@ interface NavItem {
   exactMatch?: boolean;
 }
 
-// En teléfonos solo se muestran las 2 pantallas esenciales del sistema
+// Pantallas principales: Jornada de trabajo, Módulo de Combustible/KM y Estadísticas
 const items: NavItem[] = [
   {
     href: '/',
@@ -27,6 +27,21 @@ const items: NavItem[] = [
         />
         <circle cx="7" cy="17" r="2" stroke="currentColor" strokeWidth={active ? '2.4' : '1.9'} />
         <circle cx="17" cy="17" r="2" stroke="currentColor" strokeWidth={active ? '2.4' : '1.9'} />
+      </svg>
+    ),
+  },
+  {
+    href: '/combustible',
+    label: 'Combustible',
+    icon: (active) => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M4 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17M16 9h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2v0M7 8h6M7 12h6"
+          stroke="currentColor"
+          strokeWidth={active ? '2.4' : '1.9'}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     ),
   },
@@ -61,7 +76,7 @@ export default function BottomNav() {
       }}
       aria-label="Navegación principal"
     >
-      <div className="max-w-md mx-auto grid grid-cols-2 px-6 pt-2">
+      <div className="max-w-md mx-auto grid grid-cols-3 px-3 pt-2">
         {items.map(({ href, label, icon, exactMatch }) => {
           const active = exactMatch ? pathname === href : pathname.startsWith(href);
           return (

@@ -8,6 +8,8 @@ export interface ITransaction {
   platform?: 'uber' | 'didi' | 'other';
   paymentMethod: 'cash' | 'transfer' | 'other';
   description?: string;
+  km?: number;
+  liters?: number;
   /** Clave de idempotencia generada por el cliente para prevenir duplicados */
   clientRequestId?: string;
   revision: number;
@@ -48,6 +50,14 @@ const TransactionSchema = new Schema<ITransaction>(
     description: {
       type: String,
       maxlength: 500,
+    },
+    km: {
+      type: Number,
+      min: 0,
+    },
+    liters: {
+      type: Number,
+      min: 0,
     },
     clientRequestId: {
       type: String,

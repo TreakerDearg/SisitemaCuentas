@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ActiveSessionData, WorkSession } from '@/types';
 import { closeSession } from '@/lib/api';
 import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
-import { formatCurrency, formatKm } from '@/lib/format';
+import { formatCurrency, formatKm, parseKm, parseMoney } from '@/lib/format';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -49,13 +49,13 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
 
   function validate() {
     const errs: typeof fieldErrors = {};
-    const km = parseInt(finalKm);
+    const km = parseKm(finalKm);
     if (!finalKm || isNaN(km)) {
       errs.finalKm = 'Ingresá el KM final.';
     } else if (km < session.initialKm) {
       errs.finalKm = `No puede ser menor que el KM inicial (${formatKm(session.initialKm)} km).`;
     }
-    const cash = parseFloat(actualCash);
+    const cash = parseMoney(actualCash);
     if (actualCash !== '' && (isNaN(cash) || cash < 0))
       errs.actualCash = 'Ingresá un monto válido.';
     setFieldErrors(errs);
@@ -68,8 +68,8 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
     setSubmitting(true);
     setError('');
     try {
-      const km = parseInt(finalKm);
-      const cash = actualCash !== '' ? parseFloat(actualCash) : summary.expectedCash;
+      const km = parseKm(finalKm);
+      const cash = actualCash !== '' ? parseMoney(actualCash) : summary.expectedCash;
       const closed = await closeSession(session._id, {
         finalKm: km,
         actualCash: cash,
@@ -85,9 +85,9 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
     }
   }
 
-  const parsedKm = parseInt(finalKm) || 0;
+  const parsedKm = parseKm(finalKm) || 0;
   const distance = parsedKm > session.initialKm ? parsedKm - session.initialKm : 0;
-  const parsedCash = actualCash !== '' ? parseFloat(actualCash) : null;
+  const parsedCash = actualCash !== '' ? parseMoney(actualCash) : null;
   const cashDiff = parsedCash !== null ? parsedCash - summary.expectedCash : null;
 
   const diffColor =
@@ -183,22 +183,43 @@ export default function CloseSessionForm({ data, onClosed, onCancel }: CloseSess
       </div>
 
       {/* KM final */}
-      <Input
-        id="finalKm"
-        label="KM final"
-        type="number"
-        inputMode="numeric"
-        min={session.initialKm}
-        placeholder={String(session.initialKm + 1)}
-        value={finalKm}
-        onChange={(e) => {
-          setFinalKm(e.target.value);
-          setFieldErrors((p) => ({ ...p, finalKm: '' }));
-        }}
-        suffix="km"
-        hint={`KM inicial: ${formatKm(session.initialKm)} km`}
-        error={fieldErrors.finalKm}
-      />
+      <div className="flex flex-col gap-1.5">
+        <Input
+          id="finalKm"
+          label="KM final del tablero"
+          type="text"
+          inputMode="numeric"
+          placeholder={String(session.initialKm + 1)}
+          value={finalKm}
+          onChange={(e) => {
+            setFinalKm(e.target.value);
+            setFieldErrors((p) => ({ ...p, finalKm: '' }));
+          }}
+          suffix="km"
+          hint={`KM al inicio: ${formatKm(session.initialKm)} km`}
+          error={fieldErrors.finalKm}
+        />
+
+        {/* Feedback visual de KM recorridos en tiempo real */}
+        {parsedKm > session.initialKm && (
+          <div
+            className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold"
+            style={{
+              background: distance > 1500 ? 'var(--color-warning-softer)' : 'var(--color-surface-elevated)',
+              color: distance > 1500 ? 'var(--color-warning)' : 'var(--color-text-secondary)',
+              border: '1px solid var(--color-border-subtle)',
+            }}
+          >
+            <span>Recorridos en este turno:</span>
+            <span className="font-extrabold tabular">+{formatKm(distance)} km</span>
+          </div>
+        )}
+        {distance > 1500 && (
+          <p className="text-xs font-semibold" style={{ color: 'var(--color-warning)' }}>
+            ⚠ ¿Hiciste {formatKm(distance)} km en este turno? Verificá que no hayas puesto dígitos de más.
+          </p>
+        )}
+      </div>
 
       {/* Efectivo real */}
       <div className="flex flex-col gap-1.5">

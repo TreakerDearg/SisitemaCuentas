@@ -69,10 +69,6 @@ export default function Home() {
 
   /* ── Handlers ── */
 
-  function handleContinueSession() {
-    setAppState('active');
-  }
-
   async function handleSessionStarted(session) {
     try {
       const active = await getActiveSession();
@@ -133,11 +129,6 @@ export default function Home() {
     return <ErrorScreen message={initError} onRetry={loadInitialState} retrying={retrying} />;
   }
 
-  // Modal de recuperación: el usuario vuelve con una jornada activa
-  if (appState === 'recover' && activeData) {
-    return <RecoverScreen data={activeData} onContinue={handleContinueSession} />;
-  }
-
   if (appState === 'closed' && closedData) {
     return (
       <SessionSummary
@@ -177,165 +168,6 @@ export default function Home() {
         />
       </BottomSheet>
     </>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════
-   PANTALLA DE RECUPERACIÓN DE JORNADA
-   Se muestra cuando se detecta una jornada activa al abrir la app
-   ══════════════════════════════════════════════════════════ */
-function RecoverScreen({ data, onContinue }) {
-  const { session, summary } = data;
-
-  const vehicleName =
-    typeof session.vehicleId === 'object' && session.vehicleId !== null
-      ? session.vehicleId.name ?? ''
-      : '';
-
-  const netColor =
-    summary.netResult > 0
-      ? 'var(--color-income)'
-      : summary.netResult < 0
-      ? 'var(--color-expense)'
-      : 'var(--color-text-primary)';
-
-  return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen px-5 py-10"
-      style={{ background: 'var(--color-background)' }}
-    >
-      <div className="w-full max-w-sm flex flex-col gap-5 animate-fade-in">
-
-        {/* Badge de estado */}
-        <div className="flex justify-center">
-          <span className="badge-active">
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse-soft"
-              style={{ background: 'var(--color-income)' }}
-            />
-            Jornada activa
-          </span>
-        </div>
-
-        {/* Título */}
-        <div className="text-center">
-          <h1
-            className="text-2xl font-bold"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
-            Tenés una jornada abierta
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            {formatDateShort(session.date)}
-            {' · '}
-            Inicio: {formatTime(session.startTime)}
-          </p>
-        </div>
-
-        {/* Resumen de la jornada */}
-        <div
-          className="rounded-3xl overflow-hidden"
-          style={{ border: '1px solid var(--color-border-subtle)' }}
-        >
-          {/* Caja */}
-          <div
-            className="px-5 py-5 text-center"
-            style={{
-              background: 'var(--color-surface)',
-              borderBottom: '1px solid var(--color-border-subtle)',
-            }}
-          >
-            <p className="section-label mb-1">Caja esperada</p>
-            <p
-              className="text-4xl font-bold tabular"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              {formatCurrency(summary.expectedCash)}
-            </p>
-          </div>
-
-          {/* Stats */}
-          <div
-            className="grid grid-cols-3 divide-x"
-            style={{
-              background: 'var(--color-surface-elevated)',
-              borderColor: 'var(--color-border-subtle)',
-            }}
-          >
-            <StatCell
-              label="Ingresos"
-              value={formatCurrency(summary.totalIncome)}
-              color="var(--color-income)"
-            />
-            <StatCell
-              label="Gastos"
-              value={formatCurrency(summary.totalExpense)}
-              color="var(--color-expense)"
-            />
-            <StatCell
-              label="Resultado"
-              value={formatCurrency(summary.netResult)}
-              color={netColor}
-            />
-          </div>
-
-          {/* Vehículo */}
-          {vehicleName && (
-            <div
-              className="flex items-center justify-center gap-2 px-5 py-3"
-              style={{
-                background: 'var(--color-surface)',
-                borderTop: '1px solid var(--color-border-subtle)',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M5 17H3v-5l2-5h14l2 5v5h-2M5 17a2 2 0 0 0 4 0M15 17a2 2 0 0 0 4 0"
-                  stroke="var(--color-text-muted)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                {vehicleName}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={onContinue}
-          className="w-full py-4 rounded-2xl text-base font-bold transition-all"
-          style={{
-            background: 'var(--color-accent)',
-            color: '#fff',
-            minHeight: '60px',
-          }}
-        >
-          Continuar jornada →
-        </button>
-
-        <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-          Tus datos se guardaron correctamente
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function StatCell({ label, value, color }) {
-  return (
-    <div className="flex flex-col items-center py-3 px-2 gap-0.5">
-      <span className="section-label text-center">{label}</span>
-      <span
-        className="text-sm font-bold tabular text-center"
-        style={{ color: color ?? 'var(--color-text-primary)' }}
-      >
-        {value}
-      </span>
-    </div>
   );
 }
 

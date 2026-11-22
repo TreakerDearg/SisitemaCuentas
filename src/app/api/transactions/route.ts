@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
       platform,
       paymentMethod,
       description,
+      km,
+      liters,
       clientRequestId,
     } = body;
 
@@ -88,6 +90,8 @@ export async function POST(request: NextRequest) {
       platform: platform || undefined,
       paymentMethod,
       description: description?.trim() || undefined,
+      km: typeof km === 'number' && km >= 0 ? km : undefined,
+      liters: typeof liters === 'number' && liters >= 0 ? liters : undefined,
       clientRequestId: clientRequestId || undefined,
     });
 
@@ -127,13 +131,22 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
+    const type = searchParams.get('type');
+    const limit = searchParams.get('limit');
 
     const query: Record<string, unknown> = {};
     if (sessionId) query.sessionId = sessionId;
+    if (type) query.type = type;
 
-    const transactions = await Transaction.find(query)
+    let cursor = Transaction.find(query)
       .populate('category')
       .sort({ createdAt: -1 });
+
+    if (limit) {
+      cursor = cursor.limit(parseInt(limit, 10));
+    }
+
+    const transactions = await cursor;
 
     return NextResponse.json({ success: true, data: transactions });
   } catch (error) {

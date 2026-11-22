@@ -33,6 +33,8 @@ export interface Transaction {
   platform?: 'uber' | 'didi' | 'other' | null;
   paymentMethod: 'cash' | 'transfer' | 'other';
   description?: string;
+  km?: number;
+  liters?: number;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -98,6 +100,8 @@ export interface CreateTransactionPayload {
   platform?: 'uber' | 'didi' | 'other';
   category?: string;
   description?: string;
+  km?: number;
+  liters?: number;
   /** Clave de idempotencia generada por el cliente */
   clientRequestId?: string;
 }
@@ -108,6 +112,8 @@ export interface UpdateTransactionPayload {
   platform?: 'uber' | 'didi' | 'other';
   category?: string;
   description?: string;
+  km?: number;
+  liters?: number;
 }
 
 export interface CreateVehiclePayload {
