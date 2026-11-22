@@ -12,6 +12,7 @@ import {
   listOfflineRecords,
   getManualOffline,
   getMappedId,
+  clearDraft,
 } from '@/lib/offline';
 import { calculateLocalAnalytics } from '@/lib/localAnalytics';
 import { updateActiveSessionSnapshot, removeFromActiveSessionSnapshot } from '@/lib/activeSession';
@@ -221,20 +222,32 @@ export async function closeSession(
       await removeOfflineRecord('sessions', 'active');
       await removeOfflineRecord('sessions', id);
       await clearDraft(`close-session:${id}`);
+      const nowStr = new Date().toISOString();
       return {
         _id: id,
-        vehicleId: cached?.session.vehicleId ?? ('' as any),
-        date: cached?.session.date ?? new Date(),
-        startTime: cached?.session.startTime ?? new Date(),
-        endTime: new Date(),
+        vehicleId: (cached?.session.vehicleId ?? {
+          _id: '',
+          name: 'Vehículo',
+          brand: '',
+          model: '',
+          year: new Date().getFullYear(),
+          plate: '',
+          active: true,
+          createdAt: nowStr,
+          updatedAt: nowStr,
+          revision: 1,
+        }) as Vehicle,
+        date: cached?.session.date ?? nowStr,
+        startTime: cached?.session.startTime ?? nowStr,
+        endTime: nowStr,
         status: 'closed',
         initialCash: cached?.session.initialCash ?? 0,
         initialKm: cached?.session.initialKm ?? 0,
         finalKm: payload.finalKm,
         notes: payload.notes,
         revision: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: cached?.session.createdAt ?? nowStr,
+        updatedAt: nowStr,
       };
     }
     throw error;

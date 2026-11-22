@@ -104,7 +104,6 @@
 }
 
 /* ── MODO MIDNIGHT (Oscuro / Noche) ───────────────────────── */
-[data-theme="dark"],
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --color-background:          #0B0F17;
