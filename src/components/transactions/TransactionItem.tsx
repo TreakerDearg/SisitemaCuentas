@@ -10,16 +10,19 @@ interface TransactionItemProps {
 export default function TransactionItem({ transaction, onClick, sessionOpen = true }: TransactionItemProps) {
   const isIncome = transaction.type === 'income';
 
+  const paymentText = paymentLabel(transaction.paymentMethod);
   const title = isIncome
-    ? platformLabel(transaction.platform) || 'Ingreso'
+    ? (transaction.description || (platformLabel(transaction.platform) ? `Ingreso · ${platformLabel(transaction.platform)}` : `Ingreso · ${paymentText}`))
     : transaction.category?.name ?? 'Gasto';
 
-  const subtitle = [
-    paymentLabel(transaction.paymentMethod),
-    transaction.description,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const subtitle = isIncome
+    ? (transaction.description ? (platformLabel(transaction.platform) ? `${platformLabel(transaction.platform)} · ${paymentText}` : paymentText) : (platformLabel(transaction.platform) ? paymentText : ''))
+    : [
+        paymentText,
+        transaction.description,
+      ]
+        .filter(Boolean)
+        .join(' · ');
 
   const amountColor = isIncome ? 'var(--color-income)' : 'var(--color-expense)';
   const iconBg = isIncome ? 'var(--color-income-soft)' : 'var(--color-expense-soft)';
@@ -29,11 +32,11 @@ export default function TransactionItem({ transaction, onClick, sessionOpen = tr
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-colors"
+      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-colors cursor-pointer"
       style={{
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border-subtle)',
-        cursor: onClick ? 'pointer' : 'default',
+        border: '1px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)',
         transitionDuration: 'var(--motion-fast)',
       }}
       aria-label={`${isIncome ? 'Ingreso' : 'Gasto'}: ${title}, ${formatCurrency(transaction.amount)}`}

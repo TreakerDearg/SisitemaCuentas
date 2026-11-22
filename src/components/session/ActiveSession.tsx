@@ -11,6 +11,7 @@ import TransactionList from '@/components/transactions/TransactionList';
 import TransactionDetail from '@/components/transactions/TransactionDetail';
 import CloseSessionForm from './CloseSessionForm';
 import Toast, { ToastType } from '@/components/ui/Toast';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface ActiveSessionProps {
   data: ActiveSessionData;
@@ -73,56 +74,56 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--color-background)' }}>
 
-      {/* ── HEADER ── */}
+      {/* ── HEADER CON SELECTOR DE TEMA ── */}
       <header
         className="sticky top-0 z-20 px-4"
         style={{
-          background: 'var(--color-background)',
-          borderBottom: '1px solid var(--color-border-subtle)',
+          background: 'var(--color-surface)',
+          borderBottom: '1px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
-        <div className="max-w-lg mx-auto flex items-center justify-between py-3">
-          <div className="flex flex-col gap-0.5">
+        <div className="max-w-md mx-auto flex items-center justify-between py-3">
+          <div className="flex flex-col gap-1">
             <span className="badge-active">
               <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse-soft"
+                className="w-2 h-2 rounded-full animate-pulse-soft"
                 style={{ background: 'var(--color-income)' }}
                 aria-hidden="true"
               />
               Jornada activa
             </span>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-              Inicio: {formatTime(session.startTime)}
+            <p className="text-xs font-semibold pl-1" style={{ color: 'var(--color-text-muted)' }}>
+              Inicio: {formatTime(session.startTime)} · {formatDateShort(session.date)}
             </p>
           </div>
-          <div className="text-right">
+
+          <div className="flex items-center gap-3">
             {vehicleName && (
-              <p className="text-xs font-medium" style={{ color: 'var(--color-info)' }}>
-                <CarIcon /> {vehicleName}
-              </p>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-xl" style={{ background: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
+                🚗 {vehicleName}
+              </span>
             )}
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {formatDateShort(session.date)}
-            </p>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* ── CUERPO ── */}
+      {/* ── CUERPO PRINCIPAL ── */}
       <main className="flex-1 overflow-y-auto">
-        {/* pb suficiente para: botón cerrar (~68px) + BottomNav (~64px) + safe-area + margen */}
-        <div className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom))' }}>
+        <div className="max-w-md mx-auto px-4 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(10rem + env(safe-area-inset-bottom))' }}>
 
-          {/* ── 1. CAJA ESPERADA — elemento principal ── */}
+          {/* ── 1. CAJA ESPERADA (Tarjeta Hero de alto contraste) ── */}
           <section
-            className="rounded-3xl px-6 pt-7 pb-6 text-center"
+            className="rounded-3xl px-6 pt-6 pb-6 text-center"
             style={{
               background: 'var(--color-surface)',
-              border: '1px solid var(--color-border-subtle)',
+              border: '1.5px solid var(--color-border)',
+              boxShadow: 'var(--shadow-md)',
             }}
             aria-label="Caja esperada"
           >
-            <p className="section-label mb-2">Caja esperada</p>
+            <p className="section-label mb-1">Caja esperada</p>
             <p
               className="money-xl tabular"
               style={{ color: 'var(--color-text-primary)' }}
@@ -130,60 +131,68 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
             >
               {formatCurrency(summary.expectedCash)}
             </p>
-            <p className="text-xs mt-3" style={{ color: 'var(--color-text-muted)' }}>
-              Caja inicial: {formatCurrency(session.initialCash)}
+            <p className="text-xs font-semibold mt-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Caja inicial en mano: {formatCurrency(session.initialCash)}
             </p>
 
             {/* Transferencias bajo la caja */}
             {summary.transferIncome - summary.transferExpense !== 0 && (
               <div
-                className="mt-4 flex items-center justify-center gap-2 px-4 py-2 rounded-2xl mx-auto"
+                className="mt-3.5 flex items-center justify-center gap-2 px-4 py-2 rounded-2xl mx-auto"
                 style={{
                   background: 'var(--color-transfer-soft)',
                   border: '1px solid var(--color-transfer-border)',
                   width: 'fit-content',
                 }}
               >
-                <TransferIcon color="var(--color-transfer)" size={14} />
-                <span className="text-xs font-semibold" style={{ color: 'var(--color-transfer)' }}>
+                <TransferIcon color="var(--color-transfer)" size={16} />
+                <span className="text-xs font-bold" style={{ color: 'var(--color-transfer)' }}>
                   {formatCurrency(summary.transferIncome - summary.transferExpense)} en transferencias
                 </span>
               </div>
             )}
           </section>
 
-          {/* ── 2. BOTONES PRINCIPALES ── */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* ── 2. BOTONES SÓLIDOS DE ACCIÓN RÁPIDA (Grandes, táctiles) ── */}
+          <div className="grid grid-cols-2 gap-3.5">
             <button
+              type="button"
               onClick={() => setActiveSheet('income')}
-              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 transition-all"
+              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 cursor-pointer active:scale-95 transition-all"
               style={{
-                background: 'var(--color-income-soft)',
-                border: '1px solid var(--color-income-border)',
-                minHeight: '80px',
-                transitionDuration: 'var(--motion-fast)',
+                background: 'var(--color-income-solid)',
+                color: '#FFFFFF',
+                minHeight: '84px',
+                boxShadow: 'var(--shadow-income)',
+                border: 'none',
               }}
               aria-label="Registrar ingreso"
             >
-              <ArrowUpIcon color="var(--color-income)" />
-              <span className="text-base font-bold" style={{ color: 'var(--color-income)' }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.22)' }}>
+                <ArrowUpIcon color="#FFFFFF" size={22} />
+              </div>
+              <span className="text-lg font-extrabold tracking-wide">
                 + Ingreso
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveSheet('expense')}
-              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 transition-all"
+              className="flex flex-col items-center justify-center gap-2 rounded-3xl py-5 px-4 cursor-pointer active:scale-95 transition-all"
               style={{
-                background: 'var(--color-expense-soft)',
-                border: '1px solid var(--color-expense-border)',
-                minHeight: '80px',
-                transitionDuration: 'var(--motion-fast)',
+                background: 'var(--color-expense-solid)',
+                color: '#FFFFFF',
+                minHeight: '84px',
+                boxShadow: 'var(--shadow-expense)',
+                border: 'none',
               }}
               aria-label="Registrar gasto"
             >
-              <ArrowDownIcon color="var(--color-expense)" />
-              <span className="text-base font-bold" style={{ color: 'var(--color-expense)' }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.22)' }}>
+                <ArrowDownIcon color="#FFFFFF" size={22} />
+              </div>
+              <span className="text-lg font-extrabold tracking-wide">
                 − Gasto
               </span>
             </button>
@@ -192,34 +201,38 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
           {/* ── 3. RESUMEN FINANCIERO ── */}
           <section
             className="rounded-3xl overflow-hidden"
-            style={{ border: '1px solid var(--color-border-subtle)' }}
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
             aria-label="Resumen financiero"
           >
             <div
               className="px-5 py-3"
               style={{
                 background: 'var(--color-surface-elevated)',
-                borderBottom: '1px solid var(--color-border-subtle)',
+                borderBottom: '1px solid var(--color-border)',
               }}
             >
-              <span className="section-label">Resumen</span>
+              <span className="section-label">Resumen de la jornada</span>
             </div>
 
-            <div style={{ background: 'var(--color-surface)' }}>
+            <div>
               {/* Ingresos */}
               <div
                 className="flex items-center justify-between px-5 py-3.5"
                 style={{ borderBottom: '1px solid var(--color-border-subtle)' }}
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-7 h-7 rounded-xl flex items-center justify-center"
-                    style={{ background: 'var(--color-income-soft)' }}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center font-bold"
+                    style={{ background: 'var(--color-income-soft)', color: 'var(--color-income)' }}
                     aria-hidden="true"
                   >
-                    <ArrowUpIcon color="var(--color-income)" size={14} />
+                    +
                   </div>
-                  <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-text-secondary)' }}>
                     Ingresos
                   </span>
                 </div>
@@ -233,15 +246,15 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
                 className="flex items-center justify-between px-5 py-3.5"
                 style={{ borderBottom: '1px solid var(--color-border-subtle)' }}
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-7 h-7 rounded-xl flex items-center justify-center"
-                    style={{ background: 'var(--color-expense-soft)' }}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center font-bold"
+                    style={{ background: 'var(--color-expense-soft)', color: 'var(--color-expense)' }}
                     aria-hidden="true"
                   >
-                    <ArrowDownIcon color="var(--color-expense)" size={14} />
+                    −
                   </div>
-                  <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                  <span className="text-sm font-bold" style={{ color: 'var(--color-text-secondary)' }}>
                     Gastos
                   </span>
                 </div>
@@ -250,13 +263,13 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
                 </span>
               </div>
 
-              {/* Resultado */}
+              {/* Resultado neto */}
               <div className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  Resultado
+                <span className="text-sm font-extrabold" style={{ color: 'var(--color-text-primary)' }}>
+                  Ganancia neta
                 </span>
                 <span
-                  className="money-md"
+                  className="money-md font-extrabold"
                   style={{ color: netColor }}
                 >
                   {summary.netResult >= 0 ? '+' : '−'}{formatCurrency(Math.abs(summary.netResult))}
@@ -265,77 +278,65 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
             </div>
           </section>
 
-          {/* ── 4. EFECTIVO / TRANSFERENCIAS ── */}
+          {/* ── 4. EFECTIVO / TRANSFERENCIAS (Desglose nítido) ── */}
           <div className="grid grid-cols-2 gap-3">
             <div
-              className="rounded-3xl px-4 py-4"
+              className="rounded-3xl p-4 flex flex-col gap-1"
               style={{
                 background: 'var(--color-surface)',
-                border: '1px solid var(--color-border-subtle)',
+                border: '1px solid var(--color-border)',
+                boxShadow: 'var(--shadow-sm)',
               }}
-              aria-label="Efectivo en caja"
             >
-              <div className="flex items-center gap-1.5 mb-2">
-                <CashIcon color="var(--color-text-muted)" size={13} />
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-base">💵</span>
                 <span className="section-label">Efectivo</span>
               </div>
-              <p
-                className="text-xl font-bold tabular"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
+              <p className="text-2xl font-extrabold tabular" style={{ color: 'var(--color-text-primary)' }}>
                 {formatCurrency(summary.cashIncome - summary.cashExpense)}
               </p>
             </div>
 
             <div
-              className="rounded-3xl px-4 py-4"
+              className="rounded-3xl p-4 flex flex-col gap-1"
               style={{
-                background: 'var(--color-transfer-softer)',
-                border: '1px solid var(--color-transfer-border)',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                boxShadow: 'var(--shadow-sm)',
               }}
-              aria-label="Transferencias"
             >
-              <div className="flex items-center gap-1.5 mb-2">
-                <TransferIcon color="var(--color-transfer)" size={13} />
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-base">📱</span>
                 <span className="section-label" style={{ color: 'var(--color-transfer)' }}>
                   Transfer.
                 </span>
               </div>
-              <p
-                className="text-xl font-bold tabular"
-                style={{ color: 'var(--color-transfer)' }}
-              >
+              <p className="text-2xl font-extrabold tabular" style={{ color: 'var(--color-transfer)' }}>
                 {formatCurrency(summary.transferIncome - summary.transferExpense)}
               </p>
             </div>
           </div>
 
-          {/* ── 5. KM ── */}
+          {/* ── 5. ODÓMETRO (KM) ── */}
           <div
             className="rounded-3xl px-5 py-4 flex items-center gap-3"
             style={{
               background: 'var(--color-surface)',
-              border: '1px solid var(--color-border-subtle)',
+              border: '1px solid var(--color-border)',
+              boxShadow: 'var(--shadow-sm)',
             }}
-            aria-label="Kilómetros"
           >
             <div
-              className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'var(--color-info-soft)' }}
+              className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0"
+              style={{ background: 'var(--color-info-soft)', color: 'var(--color-info)' }}
               aria-hidden="true"
             >
-              <RouteIcon color="var(--color-info)" size={16} />
+              🚗
             </div>
             <div className="flex-1">
-              <p className="section-label">KM inicial</p>
-              <p className="text-lg font-bold tabular mt-0.5" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="section-label">KM al iniciar</p>
+              <p className="text-xl font-extrabold tabular" style={{ color: 'var(--color-text-primary)' }}>
                 {formatKm(session.initialKm)} km
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="section-label">Recorridos</p>
-              <p className="text-lg font-bold mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                —
               </p>
             </div>
           </div>
@@ -346,10 +347,11 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
               <span className="section-label">Movimientos</span>
               {transactions.length > 0 && (
                 <span
-                  className="text-xs px-2 py-0.5 rounded-full tabular"
+                  className="text-xs px-2.5 py-0.5 rounded-full font-bold tabular"
                   style={{
                     background: 'var(--color-surface-elevated)',
-                    color: 'var(--color-text-muted)',
+                    color: 'var(--color-text-secondary)',
+                    border: '1px solid var(--color-border)',
                   }}
                 >
                   {transactions.length}
@@ -368,25 +370,25 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
         </div>
       </main>
 
-      {/* ── BOTÓN CERRAR — fijo arriba del BottomNav ── */}
+      {/* ── BOTÓN CERRAR JORNADA (Fijo sobre la barra inferior) ── */}
       <div
         className="fixed left-0 right-0 z-20 px-4"
         style={{
-          bottom: 'calc(64px + env(safe-area-inset-bottom))',
-          background: 'linear-gradient(to top, var(--color-background) 70%, transparent)',
+          bottom: 'calc(62px + env(safe-area-inset-bottom))',
+          background: 'linear-gradient(to top, var(--color-background) 80%, transparent)',
           paddingTop: '1rem',
           paddingBottom: '0.75rem',
         }}
       >
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-md mx-auto">
           <Button
             variant="outline"
             size="lg"
             fullWidth
             onClick={() => setActiveSheet('close')}
+            className="font-bold py-4 text-base"
           >
-            <LockIcon />
-            Cerrar jornada
+            🔒 Cerrar jornada
           </Button>
         </div>
       </div>
@@ -434,7 +436,6 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
   );
 }
 
-/* ── recalculate (local) ── */
 function recalculate(data: ActiveSessionData, transactions: Transaction[]): ActiveSessionData {
   const totalIncome = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -459,57 +460,26 @@ function recalculate(data: ActiveSessionData, transactions: Transaction[]): Acti
   };
 }
 
-/* ── Icons ── */
 function ArrowUpIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 19V5M5 12l7-7 7 7" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 19V5M5 12l7-7 7 7" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
+
 function ArrowDownIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 5v14M19 12l-7 7-7-7" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 5v14M19 12l-7 7-7-7" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
+
 function TransferIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4m4-4H3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function CashIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="2" y="6" width="20" height="12" rx="2" stroke={color} strokeWidth="1.8" />
-      <circle cx="12" cy="12" r="3" stroke={color} strokeWidth="1.8" />
-    </svg>
-  );
-}
-function RouteIcon({ color = 'currentColor', size = 18 }: { color?: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="6" cy="19" r="2" stroke={color} strokeWidth="1.8" />
-      <circle cx="18" cy="5" r="2" stroke={color} strokeWidth="1.8" />
-      <path d="M6 17V9a6 6 0 0 1 12 0v8" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-function CarIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ display: 'inline', marginRight: '2px' }} aria-hidden="true">
-      <path d="M5 17H3v-5l2-5h14l2 5v5h-2M5 17a2 2 0 0 0 4 0M15 17a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function LockIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4m4-4H3" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

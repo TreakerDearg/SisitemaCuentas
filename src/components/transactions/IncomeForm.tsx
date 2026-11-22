@@ -6,19 +6,6 @@ import { createTransaction, generateRequestId } from '@/lib/api';
 import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { useLastChoice } from '@/hooks/useLastChoice';
 import Button from '@/components/ui/Button';
-import SegmentedControl from '@/components/ui/SegmentedControl';
-
-const PLATFORM_OPTIONS = [
-  { value: 'uber', label: 'Uber' },
-  { value: 'didi', label: 'DiDi' },
-  { value: 'other', label: 'Otro' },
-];
-
-const METHOD_OPTIONS = [
-  { value: 'cash', label: 'Efectivo' },
-  { value: 'transfer', label: 'Transfer.' },
-  { value: 'other', label: 'Otro' },
-];
 
 interface IncomeFormProps {
   sessionId: string;
@@ -28,11 +15,13 @@ interface IncomeFormProps {
 
 export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormProps) {
   const [amount, setAmount] = useState('');
-  const [platform, setPlatform] = useLastChoice('income_platform', 'uber');
   const [paymentMethod, setPaymentMethod] = useLastChoice('income_method', 'cash');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ amount?: string; general?: string }>({});
+
+  const submittingRef = useRef(false);
+  const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void getDraft<{ amount: string; description: string }>(`income:${sessionId}`).then((draft) => {
@@ -50,13 +39,9 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
     return () => window.clearTimeout(timer);
   }, [amount, description, sessionId]);
 
-  // Prevención de doble envío con ref (más confiable que state solo)
-  const submittingRef = useRef(false);
-  const amountRef = useRef<HTMLInputElement>(null);
-
-  // Foco automático al abrir
+  // Foco automático en el monto al abrir
   useEffect(() => {
-    const t = setTimeout(() => amountRef.current?.focus(), 100);
+    const t = setTimeout(() => amountRef.current?.focus(), 120);
     return () => clearTimeout(t);
   }, []);
 
@@ -71,14 +56,13 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
   }
 
   async function handleSave() {
-    if (submittingRef.current) return; // prevención de doble tap
+    if (submittingRef.current) return;
     if (!validate()) return;
 
     submittingRef.current = true;
     setSubmitting(true);
     setErrors({});
 
-    // Generar clientRequestId para idempotencia
     const clientRequestId = generateRequestId();
 
     try {
@@ -86,7 +70,6 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
         sessionId,
         type: 'income',
         amount: parseFloat(amount.replace(',', '.')),
-        platform: platform as 'uber' | 'didi' | 'other',
         paymentMethod: paymentMethod as 'cash' | 'transfer' | 'other',
         description: description.trim() || undefined,
         clientRequestId,
@@ -100,31 +83,32 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
       submittingRef.current = false;
       setSubmitting(false);
     }
-    // No resetear submittingRef en éxito — el modal se cierra, el form se desmonta
   }
 
-  // Enter en el campo de monto guarda directamente
   function handleAmountKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') handleSave();
   }
 
   return (
-    <div className="flex flex-col gap-5 px-5 py-5">
+    <div className="flex flex-col gap-5 px-5 py-5 animate-fade-in">
 
-      {/* ── Monto — campo principal, prominente ── */}
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="income-amount" className="section-label">¿Cuánto recibiste?</label>
+      {/* ── Monto directo ── */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor="income-amount" className="section-label">
+          ¿Cuánto cobraste?
+        </label>
         <div
-          className="flex items-center rounded-2xl px-4 gap-2"
+          className="flex items-center rounded-2xl px-4 gap-2 transition-all"
           style={{
-            background: 'var(--color-income-softer)',
+            background: 'var(--color-surface)',
             border: errors.amount
-              ? '1px solid var(--color-expense)'
-              : '1px solid var(--color-income-border)',
-            minHeight: '80px',
+              ? '2px solid var(--color-expense)'
+              : '2px solid var(--color-income-border)',
+            boxShadow: 'var(--shadow-sm)',
+            minHeight: '84px',
           }}
         >
-          <span className="text-3xl font-light select-none" style={{ color: 'var(--color-income)' }}>
+          <span className="text-3xl font-bold select-none" style={{ color: 'var(--color-income)' }}>
             $
           </span>
           <input
@@ -132,61 +116,79 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
             id="income-amount"
             type="number"
             inputMode="decimal"
-            min="0.01"
+            min="1"
             step="any"
             placeholder="0"
             value={amount}
             onChange={(e) => { setAmount(e.target.value); setErrors({}); }}
             onKeyDown={handleAmountKeyDown}
-            className="flex-1 bg-transparent text-5xl font-bold outline-none tabular"
-            style={{ color: 'var(--color-income)' }}
+            className="flex-1 bg-transparent text-4xl font-extrabold outline-none tabular"
+            style={{ color: 'var(--color-text-primary)' }}
             aria-label="Monto del ingreso"
-            aria-invalid={!!errors.amount}
-            aria-describedby={errors.amount ? 'income-amount-error' : undefined}
             disabled={submitting}
           />
         </div>
         {errors.amount && (
-          <p id="income-amount-error" className="text-xs" style={{ color: 'var(--color-expense)' }} role="alert">
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-expense)' }} role="alert">
             {errors.amount}
           </p>
         )}
       </div>
 
-      {/* ── Plataforma — con última elección recordada ── */}
-      <SegmentedControl
-        label="Plataforma"
-        options={PLATFORM_OPTIONS}
-        value={platform}
-        onChange={setPlatform}
-        accent="income"
-      />
+      {/* ── Forma de pago (Botones grandes táctiles) ── */}
+      <div className="flex flex-col gap-2">
+        <label className="section-label">¿Cómo te pagaron?</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('cash')}
+            className="flex items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all cursor-pointer"
+            style={{
+              background: paymentMethod === 'cash' ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
+              border: paymentMethod === 'cash'
+                ? '2px solid var(--color-accent)'
+                : '1px solid var(--color-border)',
+              color: paymentMethod === 'cash' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              boxShadow: paymentMethod === 'cash' ? 'var(--shadow-sm)' : 'none',
+              minHeight: '56px',
+            }}
+          >
+            <span className="text-xl">💵</span>
+            <span>Efectivo</span>
+          </button>
 
-      {/* ── Método de pago ── */}
-      <SegmentedControl
-        label="Método de pago"
-        options={METHOD_OPTIONS}
-        value={paymentMethod}
-        onChange={setPaymentMethod}
-        accent={paymentMethod === 'transfer' ? 'transfer' : 'default'}
-      />
+          <button
+            type="button"
+            onClick={() => setPaymentMethod('transfer')}
+            className="flex items-center justify-center gap-2 py-4 px-3 rounded-2xl font-bold transition-all cursor-pointer"
+            style={{
+              background: paymentMethod === 'transfer' ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
+              border: paymentMethod === 'transfer'
+                ? '2px solid var(--color-transfer)'
+                : '1px solid var(--color-border)',
+              color: paymentMethod === 'transfer' ? 'var(--color-transfer)' : 'var(--color-text-muted)',
+              boxShadow: paymentMethod === 'transfer' ? 'var(--shadow-sm)' : 'none',
+              minHeight: '56px',
+            }}
+          >
+            <span className="text-xl">📱</span>
+            <span>Transferencia</span>
+          </button>
+        </div>
+      </div>
 
-      {/* ── Descripción ── */}
+      {/* ── Nota opcional ── */}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="income-desc" className="section-label">
-          Nota{' '}
-          <span style={{ color: 'var(--color-text-disabled)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-            (opcional)
-          </span>
+          Nota corta <span style={{ textTransform: 'none', fontWeight: 'normal', color: 'var(--color-text-tertiary)' }}>(opcional)</span>
         </label>
         <input
           id="income-desc"
           type="text"
-          inputMode="text"
-          placeholder="Anotá algo si querés..."
+          placeholder="Ej: Viaje al centro, propina..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-2xl px-4 py-3 text-base outline-none"
+          className="w-full rounded-2xl px-4 py-3 text-base outline-none transition-colors"
           style={{
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
@@ -199,7 +201,7 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
 
       {errors.general && (
         <p
-          className="text-sm rounded-2xl px-4 py-3"
+          className="text-sm font-medium rounded-2xl px-4 py-3"
           style={{
             color: 'var(--color-expense)',
             background: 'var(--color-expense-soft)',
@@ -211,16 +213,17 @@ export default function IncomeForm({ sessionId, onSaved, onCancel }: IncomeFormP
         </p>
       )}
 
-      <div className="flex flex-col gap-3 pt-1 pb-2">
+      {/* ── Botones ── */}
+      <div className="flex flex-col gap-3 pt-2 pb-2">
         <Button
-          variant="income"
+          variant="income-solid"
           size="xl"
           fullWidth
           onClick={handleSave}
           loading={submitting}
           disabled={submitting}
         >
-          {submitting ? 'Registrando...' : '+ Guardar ingreso'}
+          + Guardar ingreso
         </Button>
         <Button variant="ghost" size="md" fullWidth onClick={onCancel} disabled={submitting}>
           Cancelar

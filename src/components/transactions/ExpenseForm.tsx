@@ -146,13 +146,14 @@ export default function ExpenseForm({ sessionId, onSaved, onCancel }: ExpenseFor
       <div className="flex flex-col gap-1.5">
         <label htmlFor="expense-amount" className="section-label">¿Cuánto gastaste?</label>
         <div
-          className="flex items-center rounded-2xl px-4 gap-2"
+          className="flex items-center rounded-2xl px-4 gap-2 transition-all"
           style={{
-            background: 'var(--color-expense-softer)',
+            background: 'var(--color-surface)',
             border: errors.amount
               ? '2px solid var(--color-expense)'
-              : '1px solid var(--color-expense-border)',
-            minHeight: '80px',
+              : '2px solid var(--color-expense-border)',
+            boxShadow: 'var(--shadow-sm)',
+            minHeight: '84px',
           }}
         >
           <span className="text-3xl font-light select-none" style={{ color: 'var(--color-expense)' }}>

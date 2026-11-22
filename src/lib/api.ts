@@ -100,7 +100,10 @@ export async function getActiveSession(): Promise<ActiveSessionData | null> {
     });
 
     // 404 = no hay jornada activa (respuesta esperada y válida)
-    if (res.status === 404) return null;
+    if (res.status === 404) {
+      await removeOfflineRecord('sessions', 'active');
+      return null;
+    }
 
     const json: ApiResponse<ActiveSessionData> & { code?: string } = await res.json();
     if (!json.success || !res.ok) {
@@ -204,12 +207,38 @@ export async function closeSession(
   const body = { ...payload, clientRequestId: generateRequestId() };
   const cached = await getOfflineRecord<ActiveSessionData>('sessions', 'active');
   const optimistic = cached ? { ...cached.session, ...payload, status: 'closed' as const, endTime: new Date().toISOString() } : undefined;
-  return apiFetch<WorkSession>(`/api/sessions/${id}/close`, {
-    method: 'PATCH',
-    body: JSON.stringify(body),
-  }, {
-    entity: 'sessions', kind: 'update', entityId: id, method: 'PATCH', body, optimistic,
-  });
+  try {
+    return await apiFetch<WorkSession>(`/api/sessions/${id}/close`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }, {
+      entity: 'sessions', kind: 'update', entityId: id, method: 'PATCH', body, optimistic,
+    });
+  } catch (error) {
+    const typed = error as Error & { status?: number };
+    if (typed.status === 404 || /404|no encontrada/i.test(typed.message)) {
+      console.warn(`[closeSession] Sesión ${id} no encontrada en backend (404). Purgando estado local.`);
+      await removeOfflineRecord('sessions', 'active');
+      await removeOfflineRecord('sessions', id);
+      await clearDraft(`close-session:${id}`);
+      return {
+        _id: id,
+        vehicleId: cached?.session.vehicleId ?? ('' as any),
+        date: cached?.session.date ?? new Date(),
+        startTime: cached?.session.startTime ?? new Date(),
+        endTime: new Date(),
+        status: 'closed',
+        initialCash: cached?.session.initialCash ?? 0,
+        initialKm: cached?.session.initialKm ?? 0,
+        finalKm: payload.finalKm,
+        notes: payload.notes,
+        revision: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+    throw error;
+  }
 }
 
 // ─── Transactions ──────────────────────────────

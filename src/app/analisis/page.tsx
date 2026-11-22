@@ -24,6 +24,8 @@ import {
   calcVariation,
   formatVariation,
 } from '@/lib/format';
+import Link from 'next/link';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import PeriodSelector from '@/components/history/PeriodSelector';
 import TrendChart from '@/components/analytics/TrendChart';
 import PlatformBreakdownCard from '@/components/analytics/PlatformBreakdownCard';
@@ -83,13 +85,16 @@ export default function AnalisisPage() {
       <div className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-6">
 
         {/* ── Header ── */}
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            Análisis
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Estadísticas de rendimiento
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+              Análisis
+            </h1>
+            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              Estadísticas de rendimiento
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* ── Período ── */}
@@ -214,8 +219,8 @@ export default function AnalisisPage() {
               </AnalyticsSection>
             )}
 
-            {/* ── 6. Plataformas ── */}
-            {platforms && (
+            {/* ── 6. Plataformas (solo si hay movimientos registrados con plataforma) ── */}
+            {platforms && platforms.grandTotal > 0 && (
               <AnalyticsSection label="Ingresos por plataforma">
                 <PlatformBreakdownCard data={platforms} />
               </AnalyticsSection>
@@ -396,31 +401,39 @@ function LoadingSkeleton() {
 function EmptyState() {
   return (
     <div
-      className="flex flex-col items-center justify-center py-14 px-6 rounded-3xl text-center gap-3"
-      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)' }}
+      className="flex flex-col items-center justify-center py-14 px-6 rounded-3xl text-center gap-4 animate-fade-in"
+      style={{
+        background: 'var(--color-surface)',
+        border: '1.5px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)',
+      }}
     >
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center"
-        style={{ background: 'var(--color-surface-elevated)' }}
+        className="w-16 h-16 rounded-3xl flex items-center justify-center text-3xl"
+        style={{ background: 'var(--color-info-soft)', color: 'var(--color-info)' }}
         aria-hidden="true"
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M18 20V10M12 20V4M6 20v-6"
-            stroke="var(--color-text-muted)"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
+        📊
       </div>
       <div>
-        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>
-          Aún no hay datos
+        <p className="text-base font-extrabold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+          Aún no hay jornadas cerradas
         </p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          Cuando cierres tu primera jornada, las estadísticas aparecerán aquí.
+        <p className="text-sm leading-relaxed font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          Cuando cierres tu primera jornada, verás aquí el rendimiento, gastos de combustible y ganancias.
         </p>
       </div>
+      <Link
+        href="/"
+        className="px-6 py-3.5 rounded-2xl text-sm font-bold transition-all mt-1 cursor-pointer active:scale-95"
+        style={{
+          background: 'var(--color-income-solid)',
+          color: '#FFFFFF',
+          boxShadow: 'var(--shadow-income)',
+        }}
+      >
+        Ir a Jornada →
+      </Link>
     </div>
   );
 }

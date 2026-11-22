@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes } from 'react';
 
-type Variant = 'primary' | 'income' | 'expense' | 'danger' | 'ghost' | 'outline' | 'transfer';
+type Variant = 'primary' | 'income' | 'income-solid' | 'expense' | 'expense-solid' | 'danger' | 'ghost' | 'outline' | 'transfer';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,27 +12,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-const variantStyles: Record<Variant, React.CSSProperties> = {
-  primary:  {},
-  income:   {},
-  expense:  {},
-  danger:   {},
-  ghost:    {},
-  outline:  {},
-  transfer: {},
-};
-
 const sizeStyles: Record<Size, string> = {
   sm: 'px-3 py-2 text-sm rounded-xl',
   md: 'px-4 py-2.5 text-sm rounded-xl',
   lg: 'px-5 py-3.5 text-base rounded-2xl',
-  xl: 'px-6 py-4 text-base font-semibold rounded-2xl',
+  xl: 'px-6 py-4 text-base font-bold rounded-2xl',
 };
 
 const sizeMinH: Record<Size, string> = {
-  sm: '36px',
-  md: '44px',
-  lg: '52px',
+  sm: '40px',
+  md: '48px',
+  lg: '54px',
   xl: '60px',
 };
 
@@ -48,18 +38,17 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-
   const variantStyle = getVariantStyle(variant);
 
   return (
     <button
       disabled={isDisabled}
       className={[
-        'inline-flex items-center justify-center gap-2 font-medium',
-        'transition-all select-none cursor-pointer',
+        'inline-flex items-center justify-center gap-2.5 font-bold',
+        'transition-all select-none cursor-pointer active:scale-[0.98]',
         sizeStyles[size],
         fullWidth ? 'w-full' : '',
-        isDisabled ? 'opacity-50 cursor-not-allowed' : '',
+        isDisabled ? 'opacity-50 cursor-not-allowed active:scale-100' : '',
         className,
       ]
         .filter(Boolean)
@@ -81,22 +70,21 @@ export default function Button({
 function getVariantStyle(variant: string): React.CSSProperties {
   switch (variant) {
     case 'income':
+    case 'income-solid':
       return {
-        background: 'var(--color-income-soft)',
-        color: 'var(--color-income)',
-        border: '1px solid var(--color-income-border)',
+        background: 'var(--color-income-solid)',
+        color: '#FFFFFF',
+        border: '1px solid transparent',
+        boxShadow: 'var(--shadow-income)',
       };
     case 'expense':
-      return {
-        background: 'var(--color-expense-soft)',
-        color: 'var(--color-expense)',
-        border: '1px solid var(--color-expense-border)',
-      };
+    case 'expense-solid':
     case 'danger':
       return {
-        background: 'var(--color-expense-soft)',
-        color: 'var(--color-expense)',
-        border: '1px solid var(--color-expense-border)',
+        background: 'var(--color-expense-solid)',
+        color: '#FFFFFF',
+        border: '1px solid transparent',
+        boxShadow: 'var(--shadow-expense)',
       };
     case 'transfer':
       return {
@@ -112,16 +100,18 @@ function getVariantStyle(variant: string): React.CSSProperties {
       };
     case 'outline':
       return {
-        background: 'transparent',
+        background: 'var(--color-surface)',
         color: 'var(--color-text-primary)',
-        border: '1px solid var(--color-border-strong)',
+        border: '1.5px solid var(--color-border)',
+        boxShadow: 'var(--shadow-sm)',
       };
     case 'primary':
     default:
       return {
         background: 'var(--color-accent)',
-        color: '#fff',
+        color: '#FFFFFF',
         border: '1px solid transparent',
+        boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
       };
   }
 }
@@ -130,7 +120,7 @@ function ButtonSpinner() {
   return (
     <svg
       className="animate-spin shrink-0"
-      width="16" height="16"
+      width="18" height="18"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"

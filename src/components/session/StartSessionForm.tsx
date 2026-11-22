@@ -1,15 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Vehicle, WorkSession } from '@/types';
-import { getVehicles, createSession } from '@/lib/api';
+import { getVehicles, createSession, createTransaction, getCategories, createCategory, generateRequestId } from '@/lib/api';
 import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
-import { todayISO, nowTimeHHMM, formatDate, formatCurrency, formatKm } from '@/lib/format';
-import VehicleSelector from '@/components/vehicle/VehicleSelector';
+import { todayISO, nowTimeHHMM } from '@/lib/format';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-
-type Step = 'form' | 'confirm';
 
 interface StartSessionFormProps {
   onSessionStarted: (session: WorkSession) => void;
@@ -17,312 +13,360 @@ interface StartSessionFormProps {
 }
 
 export default function StartSessionForm({ onSessionStarted, onActiveSessionFound }: StartSessionFormProps) {
-  const [step, setStep] = useState<Step>('form');
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const [form, setForm] = useState({
-    vehicleId: '',
-    initialCash: '',
-    initialKm: '',
-    date: todayISO(),
-    startTime: nowTimeHHMM(),
-    notes: '',
-  });
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
+  // Campos principales: KM del tablero, Carga de combustible inicial, y Caja para cambio
+  const [initialKm, setInitialKm] = useState('');
+  const [fuelAmount, setFuelAmount] = useState('');
+  const [fuelPaymentMethod, setFuelPaymentMethod] = useState<'cash' | 'transfer'>('cash');
+  const [initialCash, setInitialCash] = useState('');
+  const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const submittingRef = useRef(false);
 
   useEffect(() => {
-    void getDraft<typeof form>('start-session').then((draft) => {
-      if (draft) setForm((current) => ({ ...current, ...draft }));
+    void getDraft<{
+      initialKm?: string;
+      fuelAmount?: string;
+      fuelPaymentMethod?: 'cash' | 'transfer';
+      initialCash?: string;
+      selectedVehicleId?: string;
+    }>('start-session-v2').then((draft) => {
+      if (draft) {
+        if (draft.initialKm) setInitialKm(draft.initialKm);
+        if (draft.fuelAmount) setFuelAmount(draft.fuelAmount);
+        if (draft.fuelPaymentMethod) setFuelPaymentMethod(draft.fuelPaymentMethod);
+        if (draft.initialCash) setInitialCash(draft.initialCash);
+        if (draft.selectedVehicleId) setSelectedVehicleId(draft.selectedVehicleId);
+      }
     }).catch(() => undefined);
+
     getVehicles()
       .then((vs) => {
         setVehicles(vs);
-        if (vs.length === 1) setForm((f) => ({ ...f, vehicleId: vs[0]._id }));
+        if (vs.length > 0) {
+          setSelectedVehicleId((prev) => prev || vs[0]._id);
+        }
       })
       .finally(() => setLoadingVehicles(false));
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void saveDraft('start-session', form).catch(() => undefined); }, 300);
+    const timer = window.setTimeout(() => {
+      void saveDraft('start-session-v2', {
+        initialKm,
+        fuelAmount,
+        fuelPaymentMethod,
+        initialCash,
+        selectedVehicleId,
+      }).catch(() => undefined);
+    }, 300);
     return () => window.clearTimeout(timer);
-  }, [form]);
-
-  function setField(field: keyof typeof form, value: string) {
-    setForm((f) => ({ ...f, [field]: value }));
-    setFieldErrors((e) => ({ ...e, [field]: '' }));
-  }
+  }, [initialKm, fuelAmount, fuelPaymentMethod, initialCash, selectedVehicleId]);
 
   function validate(): boolean {
-    const errors: Partial<Record<keyof typeof form, string>> = {};
-    if (!form.vehicleId) errors.vehicleId = 'Seleccioná un vehículo.';
-    const cash = parseFloat(form.initialCash);
-    if (form.initialCash === '' || isNaN(cash) || cash < 0)
-      errors.initialCash = 'Ingresá un monto válido (puede ser 0).';
-    const km = parseInt(form.initialKm);
-    if (form.initialKm === '' || isNaN(km) || km < 0)
-      errors.initialKm = 'Ingresá un KM inicial válido.';
-    if (!form.date) errors.date = 'Ingresá una fecha.';
-    if (!form.startTime) errors.startTime = 'Ingresá una hora de inicio.';
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    const errs: Record<string, string> = {};
+    const km = parseInt(initialKm);
+    if (!initialKm || isNaN(km) || km < 0) {
+      errs.initialKm = 'Ingresá el kilometraje actual del auto.';
+    }
+
+    if (!selectedVehicleId && vehicles.length > 0) {
+      errs.vehicle = 'Seleccioná un vehículo.';
+    }
+
+    const cash = initialCash === '' ? 0 : parseFloat(initialCash);
+    if (isNaN(cash) || cash < 0) {
+      errs.initialCash = 'El efectivo debe ser 0 o un monto positivo.';
+    }
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   }
 
-  async function handleSubmit() {
+  async function handleStart() {
+    if (submittingRef.current) return;
+    if (!validate()) return;
+
+    submittingRef.current = true;
     setSubmitting(true);
     setError('');
+
     try {
-      const startDateTime = new Date(`${form.date}T${form.startTime}:00`);
+      const now = new Date();
+      // 1. Crear sesión de trabajo
       const session = await createSession({
-        vehicleId: form.vehicleId,
-        date: new Date(form.date).toISOString(),
-        startTime: startDateTime.toISOString(),
-        initialCash: parseFloat(form.initialCash),
-        initialKm: parseInt(form.initialKm),
-        notes: form.notes.trim() || undefined,
+        vehicleId: selectedVehicleId || vehicles[0]?._id,
+        date: todayISO(),
+        startTime: now.toISOString(),
+        initialCash: initialCash === '' ? 0 : parseFloat(initialCash),
+        initialKm: parseInt(initialKm),
+        notes: notes.trim() || undefined,
       });
+
+      // 2. Si cargó combustible al inicio, registrar el gasto automáticamente
+      const fuelNum = parseFloat(fuelAmount);
+      if (!isNaN(fuelNum) && fuelNum > 0) {
+        try {
+          const cats = await getCategories();
+          let fuelCategory = cats.find((c) => /combustible|nafta|gnc|gas/i.test(c.name));
+          if (!fuelCategory) {
+            try {
+              fuelCategory = await createCategory('Combustible');
+            } catch {
+              fuelCategory = cats[0];
+            }
+          }
+
+          await createTransaction({
+            sessionId: session._id,
+            type: 'expense',
+            amount: fuelNum,
+            category: fuelCategory?._id,
+            paymentMethod: fuelPaymentMethod,
+            description: 'Carga inicial de combustible',
+            clientRequestId: generateRequestId(),
+          });
+        } catch (e) {
+          console.warn('[StartSession] No se pudo guardar el combustible inicial de forma automática:', e);
+        }
+      }
+
+      await clearDraft('start-session-v2');
       await clearDraft('start-session');
       onSessionStarted(session);
     } catch (e) {
-      const typed = e as Error & { code?: string; activeData?: { session: WorkSession; transactions: import('@/types').Transaction[]; summary: import('@/types').SessionSummary } };
+      const typed = e as Error & { code?: string; activeData?: any };
       if (typed.code === 'SESSION_ALREADY_ACTIVE' && typed.activeData && onActiveSessionFound) {
         onActiveSessionFound(typed.activeData);
         return;
       }
       setError(typed.message || 'No se pudo iniciar la jornada. Intentá nuevamente.');
-      setStep('form');
-    } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
 
-  const selectedVehicle = vehicles.find((v) => v._id === form.vehicleId);
-
   if (loadingVehicles) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <FormSpinner />
-          <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Cargando...</span>
+          <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--color-accent)' }} />
+          <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Preparando inicio...</span>
         </div>
       </div>
     );
   }
 
-  /* ── Confirmación ── */
-  if (step === 'confirm') {
-    return (
-      <div className="flex flex-col gap-5 px-5 py-6 animate-fade-in">
-        <div>
-          <p className="section-label mb-1">Nueva jornada</p>
-          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            Revisá los datos
-          </h2>
-        </div>
-
-        <div
-          className="rounded-3xl overflow-hidden"
-          style={{ border: '1px solid var(--color-border-subtle)' }}
-        >
-          <ConfirmRow label="Vehículo" value={selectedVehicle?.name ?? '—'} />
-          <ConfirmRow
-            label="Caja inicial"
-            value={formatCurrency(parseFloat(form.initialCash) || 0)}
-            accent
-          />
-          <ConfirmRow label="KM inicial" value={`${formatKm(parseInt(form.initialKm) || 0)} km`} />
-          <ConfirmRow label="Fecha" value={formatDate(form.date)} />
-          <ConfirmRow label="Hora de inicio" value={form.startTime} last={!form.notes.trim()} />
-          {form.notes.trim() && (
-            <ConfirmRow label="Nota" value={form.notes.trim()} last />
-          )}
-        </div>
-
-        {error && <ErrorBanner message={error} />}
-
-        <div className="flex flex-col gap-3 pt-1 pb-2">
-          <Button variant="primary" size="xl" fullWidth onClick={handleSubmit} loading={submitting}>
-            Iniciar jornada
-          </Button>
-          <Button variant="ghost" size="md" fullWidth onClick={() => setStep('form')} disabled={submitting}>
-            Volver a editar
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── Formulario ── */
   return (
-    <div className="flex flex-col gap-5 px-5 py-6 animate-fade-in">
+    <div className="flex flex-col gap-5 px-5 py-5 animate-fade-in">
+      
+      {/* ── Encabezado ágil ── */}
       <div>
-        <p className="section-label mb-1">Nueva jornada</p>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-          ¿Cómo empezás hoy?
+        <h2 className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+          Arrancar jornada
         </h2>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+          Anotá el odómetro y la carga en la estación de servicio.
+        </p>
       </div>
 
-      <VehicleSelector
-        vehicles={vehicles}
-        selectedId={form.vehicleId}
-        onChange={(id) => setField('vehicleId', id)}
-        onVehicleCreated={(v) => setVehicles((prev) => [...prev, v])}
-        error={fieldErrors.vehicleId}
-      />
-
-      {/* Caja inicial */}
+      {/* ── 1. KM Actual (Obligatorio) ── */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="initialCash" className="section-label">Dinero inicial</label>
+        <label htmlFor="initialKm" className="section-label">
+          KM del tablero
+        </label>
         <div
-          className="flex items-center rounded-2xl px-4 gap-2 transition-colors"
+          className="flex items-center rounded-2xl px-4 gap-2"
           style={{
             background: 'var(--color-surface)',
-            border: fieldErrors.initialCash
-              ? '1px solid var(--color-expense)'
-              : '1px solid var(--color-border)',
+            border: fieldErrors.initialKm
+              ? '2px solid var(--color-expense)'
+              : '1.5px solid var(--color-border)',
             minHeight: '64px',
           }}
         >
-          <span className="text-2xl font-light" style={{ color: 'var(--color-text-muted)' }}>$</span>
           <input
-            id="initialCash"
+            id="initialKm"
             type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            placeholder="0"
-            value={form.initialCash}
-            onChange={(e) => setField('initialCash', e.target.value)}
-            className="flex-1 bg-transparent text-3xl font-bold outline-none tabular"
+            inputMode="numeric"
+            placeholder="Ej: 235000"
+            value={initialKm}
+            onChange={(e) => {
+              setInitialKm(e.target.value);
+              setFieldErrors((p) => ({ ...p, initialKm: '' }));
+            }}
+            className="flex-1 bg-transparent text-2xl font-bold outline-none tabular"
             style={{ color: 'var(--color-text-primary)' }}
-            aria-label="Dinero inicial"
+            autoFocus
           />
+          <span className="text-base font-bold select-none" style={{ color: 'var(--color-text-tertiary)' }}>
+            km
+          </span>
         </div>
-        {fieldErrors.initialCash && (
-          <p className="text-xs" style={{ color: 'var(--color-expense)' }} role="alert">
-            {fieldErrors.initialCash}
+        {fieldErrors.initialKm && (
+          <p className="text-xs font-semibold" style={{ color: 'var(--color-expense)' }}>
+            {fieldErrors.initialKm}
           </p>
         )}
       </div>
 
-      <Input
-        id="initialKm"
-        label="KM inicial"
-        type="number"
-        inputMode="numeric"
-        min="0"
-        placeholder="125430"
-        value={form.initialKm}
-        onChange={(e) => setField('initialKm', e.target.value)}
-        suffix="km"
-        error={fieldErrors.initialKm}
-      />
+      {/* ── 2. Carga de Combustible Inicial ── */}
+      <div
+        className="rounded-3xl p-4 flex flex-col gap-3"
+        style={{
+          background: 'var(--color-surface-elevated)',
+          border: '1.5px solid var(--color-border)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xl">⛽</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
+            Carga de combustible
+          </span>
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium ml-auto" style={{ background: 'var(--color-income-soft)', color: 'var(--color-income)' }}>
+            Inicio
+          </span>
+        </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Input
-          id="date"
-          label="Fecha"
-          type="date"
-          value={form.date}
-          onChange={(e) => setField('date', e.target.value)}
-          error={fieldErrors.date}
-        />
-        <Input
-          id="startTime"
-          label="Hora inicio"
-          type="time"
-          value={form.startTime}
-          onChange={(e) => setField('startTime', e.target.value)}
-          error={fieldErrors.startTime}
-        />
+        <div className="flex flex-col gap-1">
+          <div
+            className="flex items-center rounded-2xl px-4 gap-2"
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              minHeight: '56px',
+            }}
+          >
+            <span className="text-xl font-bold select-none" style={{ color: 'var(--color-text-muted)' }}>$</span>
+            <input
+              id="fuelAmount"
+              type="number"
+              inputMode="decimal"
+              placeholder="¿Cuánto cargaste? (0 si no cargaste)"
+              value={fuelAmount}
+              onChange={(e) => setFuelAmount(e.target.value)}
+              className="flex-1 bg-transparent text-xl font-bold outline-none tabular"
+              style={{ color: 'var(--color-text-primary)' }}
+            />
+          </div>
+        </div>
+
+        {parseFloat(fuelAmount) > 0 && (
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <button
+              type="button"
+              onClick={() => setFuelPaymentMethod('cash')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              style={{
+                background: fuelPaymentMethod === 'cash' ? 'var(--color-surface)' : 'transparent',
+                border: fuelPaymentMethod === 'cash' ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
+                color: fuelPaymentMethod === 'cash' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              }}
+            >
+              <span>💵 Pagado en Efectivo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFuelPaymentMethod('transfer')}
+              className="py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              style={{
+                background: fuelPaymentMethod === 'transfer' ? 'var(--color-surface)' : 'transparent',
+                border: fuelPaymentMethod === 'transfer' ? '2px solid var(--color-transfer)' : '1px solid var(--color-border)',
+                color: fuelPaymentMethod === 'transfer' ? 'var(--color-transfer)' : 'var(--color-text-muted)',
+              }}
+            >
+              <span>📱 Transferencia</span>
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* ── 3. Dinero para cambio (Caja inicial) ── */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="notes" className="section-label">
-          Nota{' '}
-          <span style={{ color: 'var(--color-text-disabled)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-            (opcional)
-          </span>
+        <label htmlFor="initialCash" className="section-label">
+          Efectivo en billetera (para cambio)
         </label>
-        <textarea
-          id="notes"
-          rows={2}
-          placeholder="Anotá algo si querés..."
-          value={form.notes}
-          onChange={(e) => setField('notes', e.target.value)}
-          className="w-full rounded-2xl px-4 py-3 text-base resize-none outline-none"
+        <div
+          className="flex items-center rounded-2xl px-4 gap-2"
           style={{
             background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            color: 'var(--color-text-primary)',
+            border: fieldErrors.initialCash
+              ? '2px solid var(--color-expense)'
+              : '1.5px solid var(--color-border)',
+            minHeight: '60px',
           }}
-        />
+        >
+          <span className="text-xl font-bold select-none" style={{ color: 'var(--color-cash)' }}>$</span>
+          <input
+            id="initialCash"
+            type="number"
+            inputMode="decimal"
+            placeholder="0"
+            value={initialCash}
+            onChange={(e) => setInitialCash(e.target.value)}
+            className="flex-1 bg-transparent text-xl font-bold outline-none tabular"
+            style={{ color: 'var(--color-text-primary)' }}
+          />
+        </div>
       </div>
 
-      <div className="pt-1 pb-2">
-        <Button variant="primary" size="xl" fullWidth onClick={() => { if (validate()) setStep('confirm'); }}>
-          Revisar →
+      {/* ── 4. Selector de Vehículo si hay más de 1 ── */}
+      {vehicles.length > 1 && (
+        <div className="flex flex-col gap-1.5">
+          <span className="section-label">Vehículo</span>
+          <div className="flex gap-2 flex-wrap">
+            {vehicles.map((v) => (
+              <button
+                key={v._id}
+                type="button"
+                onClick={() => setSelectedVehicleId(v._id)}
+                className="px-4 py-2 rounded-2xl text-sm font-bold transition-all cursor-pointer"
+                style={{
+                  background: selectedVehicleId === v._id ? 'var(--color-accent)' : 'var(--color-surface)',
+                  color: selectedVehicleId === v._id ? '#fff' : 'var(--color-text-secondary)',
+                  border: selectedVehicleId === v._id ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                }}
+              >
+                🚗 {v.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p
+          className="text-sm font-semibold rounded-2xl px-4 py-3"
+          style={{
+            color: 'var(--color-expense)',
+            background: 'var(--color-expense-soft)',
+            border: '1px solid var(--color-expense-border)',
+          }}
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      {/* ── Botón directo de arranque (Sin pantallas intermedias) ── */}
+      <div className="pt-2 pb-2">
+        <Button
+          variant="primary"
+          size="xl"
+          fullWidth
+          onClick={handleStart}
+          loading={submitting}
+        >
+          Arrancar jornada →
         </Button>
       </div>
+
     </div>
-  );
-}
-
-/* ── Helpers ── */
-
-function ConfirmRow({
-  label,
-  value,
-  accent = false,
-  last = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className="flex items-center justify-between px-5 py-3.5"
-      style={{
-        background: accent ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
-        borderBottom: last ? 'none' : '1px solid var(--color-border-subtle)',
-      }}
-    >
-      <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
-      <span
-        className="text-sm font-semibold tabular"
-        style={{ color: accent ? 'var(--color-text-primary)' : 'var(--color-text-primary)' }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function ErrorBanner({ message }: { message: string }) {
-  return (
-    <p
-      className="text-sm rounded-2xl px-4 py-3"
-      style={{
-        color: 'var(--color-expense)',
-        background: 'var(--color-expense-soft)',
-        border: '1px solid var(--color-expense-border)',
-      }}
-      role="alert"
-    >
-      {message}
-    </p>
-  );
-}
-
-function FormSpinner() {
-  return (
-    <svg className="animate-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="var(--color-border)" strokeWidth="3" />
-      <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--color-accent)" strokeWidth="3" strokeLinecap="round" />
-    </svg>
   );
 }

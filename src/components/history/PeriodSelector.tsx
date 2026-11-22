@@ -51,14 +51,15 @@ export default function PeriodSelector({ preset, from, to, onChange }: PeriodSel
               role="tab"
               aria-selected={active}
               onClick={() => selectPreset(p.value)}
-              className="shrink-0 px-4 py-2 rounded-2xl text-xs font-semibold transition-all"
+              className="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer"
               style={{
-                background: active ? 'var(--color-info-soft)' : 'var(--color-surface)',
-                color: active ? 'var(--color-info)' : 'var(--color-text-muted)',
+                background: active ? 'var(--color-accent)' : 'var(--color-surface)',
+                color: active ? '#FFFFFF' : 'var(--color-text-secondary)',
                 border: active
-                  ? '1px solid var(--color-info-border)'
-                  : '1px solid var(--color-border)',
-                minHeight: '36px',
+                  ? '1px solid var(--color-accent)'
+                  : '1.5px solid var(--color-border)',
+                boxShadow: active ? '0 2px 8px rgba(37, 99, 235, 0.25)' : 'none',
+                minHeight: '38px',
                 transitionDuration: 'var(--motion-fast)',
               }}
             >

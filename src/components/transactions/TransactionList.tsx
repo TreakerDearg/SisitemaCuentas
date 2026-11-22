@@ -15,28 +15,22 @@ export default function TransactionList({ transactions, sessionOpen = true, onSe
         className="flex flex-col items-center justify-center py-10 px-6 rounded-3xl text-center"
         style={{
           background: 'var(--color-surface)',
-          border: '1px solid var(--color-border-subtle)',
+          border: '1.5px solid var(--color-border)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 text-2xl"
           style={{ background: 'var(--color-surface-elevated)' }}
           aria-hidden="true"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"
-              stroke="var(--color-text-muted)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+          📝
         </div>
-        <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+        <p className="text-base font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>
           Sin movimientos todavía
         </p>
-        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          Registrá un ingreso o un gasto para que aparezca aquí.
+        <p className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          Tocá los botones de arriba para registrar tu primer ingreso o gasto.
         </p>
       </div>
     );

@@ -78,8 +78,8 @@ export default function SegmentedControl({
                   ? activeStyle
                   : {
                       background: 'var(--color-surface)',
-                      color: 'var(--color-text-tertiary)',
-                      border: '1px solid var(--color-border)',
+                      color: 'var(--color-text-secondary)',
+                      border: '1.5px solid var(--color-border)',
                     }),
               }}
               aria-pressed={selected}

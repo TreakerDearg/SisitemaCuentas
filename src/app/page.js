@@ -74,17 +74,35 @@ export default function Home() {
     setAppState('active');
   }
 
-  function handleSessionStarted(session) {
-    setActiveData({
-      session,
-      transactions: [],
-      summary: {
-        totalIncome: 0, totalExpense: 0, netResult: 0,
-        cashIncome: 0, cashExpense: 0,
-        expectedCash: session.initialCash,
-        transferIncome: 0, transferExpense: 0, distance: 0,
-      },
-    });
+  async function handleSessionStarted(session) {
+    try {
+      const active = await getActiveSession();
+      if (active) {
+        setActiveData(active);
+      } else {
+        setActiveData({
+          session,
+          transactions: [],
+          summary: {
+            totalIncome: 0, totalExpense: 0, netResult: 0,
+            cashIncome: 0, cashExpense: 0,
+            expectedCash: session.initialCash,
+            transferIncome: 0, transferExpense: 0, distance: 0,
+          },
+        });
+      }
+    } catch {
+      setActiveData({
+        session,
+        transactions: [],
+        summary: {
+          totalIncome: 0, totalExpense: 0, netResult: 0,
+          cashIncome: 0, cashExpense: 0,
+          expectedCash: session.initialCash,
+          transferIncome: 0, transferExpense: 0, distance: 0,
+        },
+      });
+    }
     setShowStartForm(false);
     setAppState('active');
   }
