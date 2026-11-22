@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { Vehicle, WorkSession } from '@/types';
-import { getVehicles, createSession, createTransaction, getCategories, createCategory, generateRequestId } from '@/lib/api';
+import { getVehicles, createSession, createTransaction, getCategories, createCategory, generateRequestId, getActiveSession } from '@/lib/api';
 import { clearDraft, getDraft, saveDraft } from '@/lib/offline';
 import { todayISO, nowTimeHHMM } from '@/lib/format';
 import Button from '@/components/ui/Button';
@@ -141,12 +141,28 @@ export default function StartSessionForm({ onSessionStarted, onActiveSessionFoun
       await clearDraft('start-session');
       onSessionStarted(session);
     } catch (e) {
-      const typed = e as Error & { code?: string; activeData?: any };
-      if (typed.code === 'SESSION_ALREADY_ACTIVE' && typed.activeData && onActiveSessionFound) {
-        onActiveSessionFound(typed.activeData);
-        return;
+      const typed = e as any;
+      if (
+        typed?.code === 'SESSION_ALREADY_ACTIVE' ||
+        typed?.status === 409 ||
+        /ya existe una jornada abierta|already active/i.test(typed?.message)
+      ) {
+        if (typed.activeData && onActiveSessionFound) {
+          onActiveSessionFound(typed.activeData);
+          return;
+        }
+        try {
+          const active = await getActiveSession();
+          if (active && onActiveSessionFound) {
+            onActiveSessionFound(active);
+            return;
+          }
+        } catch {
+          window.location.reload();
+          return;
+        }
       }
-      setError(typed.message || 'No se pudo iniciar la jornada. Intentá nuevamente.');
+      setError(typed?.message || 'No se pudo iniciar la jornada. Intentá nuevamente.');
       submittingRef.current = false;
       setSubmitting(false);
     }

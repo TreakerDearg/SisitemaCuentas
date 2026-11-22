@@ -35,8 +35,7 @@ export default function Home() {
       const active = await getActiveSession();
       if (active) {
         setActiveData(active);
-        // Mostrar modal de recuperación en lugar de entrar directo
-        setAppState('recover');
+        setAppState('active');
         return;
       }
       try {

@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 
+// Registrar modelos explícitamente para evitar MissingSchemaError en serverless (Vercel)
+import '@/models/Vehicle';
+import '@/models/ExpenseCategory';
+import '@/models/WorkSession';
+import '@/models/Transaction';
+
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;

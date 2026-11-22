@@ -41,11 +41,11 @@ export async function PATCH(
       );
     }
 
-    // ── Protección doble cierre ──────────────────────────────
+    // ── Si ya está cerrada, responder con éxito idempotente ──
     if (session.status === 'closed') {
       return NextResponse.json(
-        { success: false, error: 'Esta jornada ya está cerrada.' },
-        { status: 409 }
+        { success: true, data: session, message: 'Esta jornada ya estaba cerrada.' },
+        { status: 200 }
       );
     }
 
@@ -70,6 +70,16 @@ export async function PATCH(
     }
 
     await session.save();
+
+    // ── Purga de raíz: asegurar que no quede NINGUNA otra jornada huérfana abierta ──
+    try {
+      await WorkSession.updateMany(
+        { _id: { $ne: session._id }, status: 'open' },
+        { $set: { status: 'closed', endTime: new Date() } }
+      );
+    } catch (e) {
+      console.warn('[sessions] No se pudieron purgar huérfanas secundarias:', e);
+    }
 
     console.info(`[sessions] Closed session ${id}, km: ${session.initialKm}→${finalKm}`);
     return NextResponse.json({ success: true, data: session });

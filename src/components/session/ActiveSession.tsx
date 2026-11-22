@@ -98,9 +98,23 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveSheet('close')}
+              className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+              style={{
+                background: 'var(--color-surface-elevated)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-secondary)',
+              }}
+              title="Cerrar jornada"
+            >
+              <span>🔒</span>
+              <span>Cerrar</span>
+            </button>
             {vehicleName && (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-xl" style={{ background: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-xl max-w-[90px] truncate" style={{ background: 'var(--color-surface-elevated)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}>
                 🚗 {vehicleName}
               </span>
             )}
@@ -111,7 +125,7 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
 
       {/* ── CUERPO PRINCIPAL ── */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-4 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(10rem + env(safe-area-inset-bottom))' }}>
+        <div className="max-w-md mx-auto px-4 py-5 flex flex-col gap-5" style={{ paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' }}>
 
           {/* ── 1. CAJA ESPERADA (Tarjeta Hero de alto contraste) ── */}
           <section
@@ -367,31 +381,24 @@ export default function ActiveSession({ data, onDataChange, onSessionClosed }: A
               }}
             />
           </section>
+
+          {/* ── CIERRE DE JORNADA AL FINAL DEL CONTENIDO (Sin tapar tarjetas) ── */}
+          <section className="pt-2 pb-4">
+            <Button
+              variant="outline"
+              size="xl"
+              fullWidth
+              onClick={() => setActiveSheet('close')}
+              className="font-bold py-4 text-base"
+            >
+              🔒 Cerrar jornada
+            </Button>
+            <p className="text-xs text-center mt-2 font-medium" style={{ color: 'var(--color-text-muted)' }}>
+              Cerrá la jornada cuando termines tu turno de trabajo
+            </p>
+          </section>
         </div>
       </main>
-
-      {/* ── BOTÓN CERRAR JORNADA (Fijo sobre la barra inferior) ── */}
-      <div
-        className="fixed left-0 right-0 z-20 px-4"
-        style={{
-          bottom: 'calc(62px + env(safe-area-inset-bottom))',
-          background: 'linear-gradient(to top, var(--color-background) 80%, transparent)',
-          paddingTop: '1rem',
-          paddingBottom: '0.75rem',
-        }}
-      >
-        <div className="max-w-md mx-auto">
-          <Button
-            variant="outline"
-            size="lg"
-            fullWidth
-            onClick={() => setActiveSheet('close')}
-            className="font-bold py-4 text-base"
-          >
-            🔒 Cerrar jornada
-          </Button>
-        </div>
-      </div>
 
       {/* ── BOTTOM SHEETS ── */}
       <BottomSheet open={activeSheet === 'income'} onClose={closeAllSheets} title="Nuevo ingreso">

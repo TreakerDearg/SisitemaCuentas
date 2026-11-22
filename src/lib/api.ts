@@ -190,12 +190,23 @@ export async function createSession(
       body: { ...payload, clientRequestId: id }, optimistic,
     });
   } catch (error) {
-    const typed = error as Error & { code?: string; data?: { existingSessionId?: string } };
-    if (typed.code === 'SESSION_ALREADY_ACTIVE' && typed.data?.existingSessionId) {
-      const active = await getSessionById(typed.data.existingSessionId);
-      const data = { session: active.session, transactions: active.transactions, summary: active.summary };
-      await saveOfflineRecord('sessions', 'active', data);
-      throw Object.assign(new Error('Ya existe una jornada activa.'), { code: 'SESSION_ALREADY_ACTIVE', activeData: data });
+    const typed = error as Error & { code?: string; status?: number; data?: { existingSessionId?: string } };
+    if (typed.code === 'SESSION_ALREADY_ACTIVE' || typed.status === 409 || /ya existe una jornada abierta/i.test(typed.message)) {
+      try {
+        const active = typed.data?.existingSessionId
+          ? await getSessionById(typed.data.existingSessionId)
+          : await getActiveSession();
+        if (active) {
+          const data = 'session' in active && 'transactions' in active
+            ? { session: active.session, transactions: active.transactions, summary: active.summary }
+            : active;
+          await saveOfflineRecord('sessions', 'active', data);
+          throw Object.assign(new Error('Ya existe una jornada activa.'), { code: 'SESSION_ALREADY_ACTIVE', activeData: data });
+        }
+      } catch (inner) {
+        if ((inner as any)?.code === 'SESSION_ALREADY_ACTIVE') throw inner;
+      }
+      throw Object.assign(new Error('Ya existe una jornada abierta.'), { code: 'SESSION_ALREADY_ACTIVE' });
     }
     throw error;
   }

@@ -10,16 +10,19 @@ import { calculateSessionSummary } from '@/lib/calculations';
 // solo quedan registrados si algún archivo en la cadena de imports los importa.
 // Sin este import aparece: MissingSchemaError: Schema hasn't been registered for model "ExpenseCategory"
 import '@/models/ExpenseCategory';
+import '@/models/Vehicle';
 
 // GET /api/sessions/active — Obtener jornada activa con transacciones y resumen
 export async function GET(_request: NextRequest) {
   try {
     await connectDB();
 
-    const session = await WorkSession.findOne({ status: 'open' }).populate({
-      path: 'vehicleId',
-      model: 'Vehicle',
-    });
+    const session = await WorkSession.findOne({ status: 'open' })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'vehicleId',
+        model: 'Vehicle',
+      });
 
     if (!session) {
       // 404 significa "no hay jornada activa" — no es un error del servidor
@@ -28,6 +31,14 @@ export async function GET(_request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Si existen otras sesiones 'open' antiguas que hayan quedado colgadas, cerrarlas para evitar huérfanas
+    try {
+      await WorkSession.updateMany(
+        { _id: { $ne: session._id }, status: 'open' },
+        { $set: { status: 'closed', endTime: new Date() } }
+      );
+    } catch {}
 
     const transactions = await Transaction.find({ sessionId: session._id })
       .populate({ path: 'category', model: 'ExpenseCategory' })

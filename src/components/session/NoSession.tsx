@@ -100,7 +100,9 @@ function LastSessionCard({ session }: { session: WorkSession }) {
       ? (session.vehicleId as { name?: string }).name ?? 'Vehículo'
       : 'Vehículo';
 
-  const distance = session.finalKm && session.finalKm > session.initialKm ? session.finalKm - session.initialKm : 0;
+  const rawDistance = session.finalKm && session.finalKm > session.initialKm ? session.finalKm - session.initialKm : 0;
+  // Solo mostrar como "recorridos" si el número es verosímil para una jornada diaria (< 2500 km)
+  const isReasonableDistance = rawDistance > 0 && rawDistance < 2500;
 
   return (
     <div
@@ -122,9 +124,11 @@ function LastSessionCard({ session }: { session: WorkSession }) {
         <span>
           {formatDateShort(session.date)} · {formatTime(session.startTime)} {session.endTime ? `→ ${formatTime(session.endTime)}` : ''}
         </span>
-        {distance > 0 && (
-          <span className="tabular">{formatKm(distance)} km recorridos</span>
-        )}
+        {isReasonableDistance ? (
+          <span className="tabular">{formatKm(rawDistance)} km recorridos</span>
+        ) : session.finalKm ? (
+          <span className="tabular">KM final: {formatKm(session.finalKm)}</span>
+        ) : null}
       </div>
     </div>
   );
